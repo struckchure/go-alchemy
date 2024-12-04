@@ -104,28 +104,36 @@ var addCmd = &cobra.Command{
 	Use:   "add",
 	Short: "Add new component",
 	Run: func(cmd *cobra.Command, args []string) {
-		var category string
-		var component string
+		var (
+			categoryId  string
+			componentId string
+		)
 
 		categoryPrompt := &survey.Select{
 			Message: "Component Category",
 			Options: components.ComponentCategoryOptions,
 		}
 
-		err := survey.AskOne(categoryPrompt, &category)
+		err := survey.AskOne(categoryPrompt, &categoryId)
 		if err != nil {
-			fmt.Printf("Prompt failed: %v\n", err)
+			color.Red("Prompt failed: %s", err)
 			return
 		}
 
 		componentPrompt := &survey.Select{
 			Message: "Select Components",
-			Options: components.ComponentMapping[category],
+			Options: components.ComponentMapping[categoryId],
 		}
 
-		err = survey.AskOne(componentPrompt, &component)
+		err = survey.AskOne(componentPrompt, &componentId)
 		if err != nil {
-			fmt.Printf("Prompt failed: %v\n", err)
+			color.Red("Prompt failed: %s", err)
+			return
+		}
+
+		err = alchemy.NewConfigService().Add(fmt.Sprintf("%s.%s", categoryId, componentId))
+		if err != nil {
+			color.Red("Prompt failed: %s", err)
 			return
 		}
 	},
