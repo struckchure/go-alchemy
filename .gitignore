@@ -30,3 +30,6 @@ go.work
 
 prisma/
 .DS_Store
+
+docker-compose.yaml
+alchemy.yaml
