@@ -6,7 +6,6 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
-	"text/template"
 
 	"github.com/fatih/color"
 	"github.com/samber/lo"
@@ -75,50 +74,27 @@ func (c *ConfigService) setupOrm(orm string, databaseProvider string) error {
 	return nil
 }
 
-type dockerComposeTmplArgs struct {
-	ProjectName      string
-	DatabaseProvider string
-}
-
 func (c *ConfigService) provisionDatabase(databaseProvider string) error {
 	color.Green("Creating %s with Docker Compose", databaseProvider)
+	defer color.Green("Docker Compose file successfully generated")
 
-	dockerComposeTmplFile := "internals/_templates/docker-compose.yaml.tmpl"
-	dockerComposeFile := "docker-compose.yaml"
-
-	funcMap := template.FuncMap{
-		"removeSigns": func(input string) string {
-			re := regexp.MustCompile(`[^\w]+`) // Matches anything that's not a word character
-			return re.ReplaceAllString(input, "")
+	err := components.GenerateTmpl(components.GenerateTmplArgs{
+		TmplPath:   "_templates/docker-compose.yaml.tmpl",
+		OutputPath: "docker-compose.yaml",
+		Values: map[string]interface{}{
+			"ProjectName":      GetDirectoryName(),
+			"DatabaseProvider": strings.ToLower(databaseProvider),
 		},
-	}
-
-	tmpl, err := template.New("docker-compose.yaml.tmpl").Funcs(funcMap).ParseFiles(dockerComposeTmplFile)
-	if err != nil {
-		color.Red("%s", err)
-
-		return err
-	}
-
-	// Create or overwrite the output file
-	file, err := os.Create(dockerComposeFile)
-	if err != nil {
-		color.Red("Failed to create output file: %s", err)
-		return err
-	}
-	defer file.Close()
-
-	err = tmpl.Execute(file, dockerComposeTmplArgs{
-		ProjectName:      GetDirectoryName(),
-		DatabaseProvider: strings.ToLower(databaseProvider),
+		Funcs: map[string]any{
+			"removeSigns": func(i string) string {
+				re := regexp.MustCompile(`[^\w]+`) // Matches anything that's not a word character
+				return re.ReplaceAllString(i, "")
+			},
+		},
 	})
 	if err != nil {
-		color.Red("%s", err)
-
 		return err
 	}
-
-	color.Green("Docker Compose file successfully written to %s", dockerComposeFile)
 
 	return nil
 }
