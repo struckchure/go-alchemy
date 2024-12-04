@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/samber/lo"
@@ -63,4 +64,9 @@ func WriteEnvVar(envFilePath, key, value string) error {
 
 func GetDirectoryName() string {
 	return lo.Must(lo.Last(strings.Split(lo.Must(os.Getwd()), "/")))
+}
+
+func RemoveNoneAlpha(i string) string {
+	re := regexp.MustCompile(`[^\w]+`) // Matches anything that's not a word character
+	return re.ReplaceAllString(i, "")
 }
