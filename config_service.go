@@ -14,7 +14,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var CategoryMapping map[string]IAlchemyComponent = map[string]IAlchemyComponent{
+var CategoryMapping map[string]components.IAlchemyComponent = map[string]components.IAlchemyComponent{
 	"authentication": components.NewAuthentication(),
 }
 
@@ -236,7 +236,7 @@ func (c *ConfigService) Add(component string) error {
 		return errors.New("category is not available")
 	}
 
-	setupComponent := func(category IAlchemyComponent, id string) error {
+	setupComponent := func(category components.IAlchemyComponent, id string) error {
 		setup, err := category.Setup(id)
 		if err != nil {
 			return err
