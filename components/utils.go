@@ -102,13 +102,14 @@ type GenerateTmplArgs struct {
 	TmplPath   string
 	OutputPath string
 	Values     interface{}
+	Funcs      map[string]any
 	GoFormat   bool
 }
 
 func GenerateTmpl(args GenerateTmplArgs) error {
 	tmplFileName := lo.Must(lo.Last(strings.Split(args.TmplPath, "/")))
 
-	tmpl, err := template.New(tmplFileName).ParseFiles(args.TmplPath)
+	tmpl, err := template.New(tmplFileName).Funcs(template.FuncMap(args.Funcs)).ParseFiles(args.TmplPath)
 	if err != nil {
 		return err
 	}
