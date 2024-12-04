@@ -8,8 +8,9 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-
-	internals "github.com/struckchure/go-alchemy/internals"
+	"github.com/struckchure/go-alchemy"
+	"github.com/struckchure/go-alchemy/components"
+	"github.com/struckchure/go-alchemy/orms"
 )
 
 var (
@@ -47,7 +48,7 @@ var initCmd = &cobra.Command{
 			return
 		}
 
-		err = survey.AskOne(&survey.Select{Message: "Choose ORM: ", Options: internals.OrmOptions}, &orm)
+		err = survey.AskOne(&survey.Select{Message: "Choose ORM: ", Options: orms.OrmOptions}, &orm)
 		if err != nil {
 			color.Red("%s", err)
 			return
@@ -56,7 +57,7 @@ var initCmd = &cobra.Command{
 		err = survey.AskOne(
 			&survey.Select{
 				Message: "Choose Database Provider: ",
-				Options: internals.OrmMappings[orm],
+				Options: orms.OrmMappings[orm],
 			}, &databaseProvider,
 		)
 		if err != nil {
@@ -85,7 +86,7 @@ var initCmd = &cobra.Command{
 			}
 		}
 
-		err = internals.NewConfigService().Init(internals.InitArgs{
+		err = alchemy.NewConfigService().Init(alchemy.InitArgs{
 			Root:                  root,
 			Orm:                   orm,
 			ShouldProvideDatabase: strings.ToLower(provisionDatabase) == "yes",
@@ -104,11 +105,11 @@ var addCmd = &cobra.Command{
 	Short: "Add new component",
 	Run: func(cmd *cobra.Command, args []string) {
 		var category string
-		var components []string
+		var component string
 
 		categoryPrompt := &survey.Select{
 			Message: "Component Category",
-			Options: internals.ComponentCategories,
+			Options: components.ComponentCategoryOptions,
 		}
 
 		err := survey.AskOne(categoryPrompt, &category)
@@ -117,12 +118,12 @@ var addCmd = &cobra.Command{
 			return
 		}
 
-		componentPrompt := &survey.MultiSelect{
+		componentPrompt := &survey.Select{
 			Message: "Select Components",
-			Options: internals.ComponentMapping[category],
+			Options: components.ComponentMapping[category],
 		}
 
-		err = survey.AskOne(componentPrompt, &components)
+		err = survey.AskOne(componentPrompt, &component)
 		if err != nil {
 			fmt.Printf("Prompt failed: %v\n", err)
 			return
