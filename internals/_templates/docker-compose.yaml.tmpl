@@ -1,0 +1,101 @@
+name: {{ .ProjectName }}
+
+services:
+{{- if (eq .DatabaseProvider "postgresql") }}
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB={{ .ProjectName | removeSigns }}
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+{{- else if (eq .DatabaseProvider "mysql") }}
+  mysql:
+    image: mysql:8.1
+    environment:
+      - MYSQL_ROOT_PASSWORD=value
+      - MYSQL_DATABASE=value
+      - MYSQL_USER=value
+      - MYSQL_PASSWORD=value
+    ports:
+      - 3306:3306
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+{{- else if (eq .DatabaseProvider "sqlite") }}
+  sqlite:
+    image: nouchka/sqlite3:latest
+    volumes:
+      - sqlite_data:/data
+    command: sh -c "sqlite3 /data/database.db"
+    ports:
+      - 8080:8080
+
+{{- else if (eq .DatabaseProvider "sqlserver") }}
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=value
+    ports:
+      - 1433:1433
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+
+{{- else if (eq .DatabaseProvider "mongodb") }}
+  mongodb:
+    image: mongo:7
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=value
+      - MONGO_INITDB_ROOT_PASSWORD=value
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb_data:/data/db
+
+{{- else if (eq .DatabaseProvider "cockroachdb") }}
+  cockroachdb:
+    image: cockroachdb/cockroach:latest
+    command: start-single-node --insecure
+    environment:
+      - COCKROACH_DATABASE=value
+    ports:
+      - 26257:26257
+      - 8080:8080
+    volumes:
+      - cockroachdb_data:/cockroach/cockroach-data
+
+{{- else if (eq .DatabaseProvider "clickhouse") }}
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    environment:
+      - CLICKHOUSE_USER=value
+      - CLICKHOUSE_PASSWORD=value
+      - CLICKHOUSE_DB=value
+    ports:
+      - 8123:8123
+      - 9000:9000
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+{{ end }}
+
+volumes:
+{{- if (eq .DatabaseProvider "postgresql") }}
+  postgres_data:
+{{- else if (eq .DatabaseProvider "mysql") }}
+  mysql_data:
+{{- else if (eq .DatabaseProvider "sqlite") }}
+  sqlite_data:
+{{- else if (eq .DatabaseProvider "sqlserver") }}
+  sqlserver_data:
+{{- else if (eq .DatabaseProvider "mongodb") }}
+  mongodb_data:
+{{- else if (eq .DatabaseProvider "cockroachdb") }}
+  cockroachdb_data:
+{{- else if (eq .DatabaseProvider "clickhouse") }}
+  clickhouse_data:
+{{ end }}
