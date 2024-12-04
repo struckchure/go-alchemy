@@ -1,6 +1,0 @@
-ProjectName: go-alchemy
-Root: .
-Orm:
-  Name: Prisma
-  DatabaseProvider: PostgreSQL
-Components: []
