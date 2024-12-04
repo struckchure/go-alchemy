@@ -2,9 +2,9 @@ package alchemy
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
-	"regexp"
 	"strings"
 
 	"github.com/fatih/color"
@@ -85,12 +85,7 @@ func (c *ConfigService) provisionDatabase(databaseProvider string) error {
 			"ProjectName":      GetDirectoryName(),
 			"DatabaseProvider": strings.ToLower(databaseProvider),
 		},
-		Funcs: map[string]any{
-			"removeSigns": func(i string) string {
-				re := regexp.MustCompile(`[^\w]+`) // Matches anything that's not a word character
-				return re.ReplaceAllString(i, "")
-			},
-		},
+		Funcs: map[string]any{"removeSigns": RemoveNoneAlpha},
 	})
 	if err != nil {
 		return err
@@ -130,6 +125,11 @@ func (c *ConfigService) Init(args InitArgs) error {
 		return err
 	}
 
+	args.DatabaseUrl = lo.Ternary(
+		args.DatabaseUrl != "",
+		args.DatabaseUrl,
+		fmt.Sprintf(`"postgresql://user:password@localhost:5432/%s?schema=public"`, RemoveNoneAlpha(config.ProjectName)),
+	)
 	err = WriteEnvVar(".env", "DATABASE_URL", args.DatabaseUrl)
 	if err != nil {
 		color.Red("%s", err)
