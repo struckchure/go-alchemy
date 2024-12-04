@@ -48,6 +48,13 @@ func (a *Authentication) Login() (err error) {
 
 	var tmpls []GenerateTmplArgs = []GenerateTmplArgs{
 		{
+			TmplPath:   "_templates/schema.prisma.tmpl",
+			OutputPath: "prisma/schema.prisma",
+			Values: map[string]interface{}{
+				"User": true,
+			},
+		},
+		{
 			TmplPath:   "_templates/prisma_user_dao.go.tmpl",
 			OutputPath: "dao/user_dao.go",
 			GoFormat:   true,
