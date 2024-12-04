@@ -28,5 +28,5 @@ go.work
 
 .env
 
-./prisma
+prisma/
 .DS_Store
