@@ -1,9 +1,15 @@
 package alchemy
 
+type Dependency struct {
+	Id   string `yaml:"Id"`
+	Path string `yaml:"Path"`
+}
+
 type Component struct {
-	Id           string   `yaml:"Id"`
-	Path         string   `yaml:"Path"`
-	Requirements []string `yaml:"Requirements"`
+	Id       string       `yaml:"Id"`
+	Path     string       `yaml:"Path"`
+	Models   []Dependency `yaml:"Models"`
+	Services []Dependency `yaml:"Services"`
 }
 
 type Orm struct {

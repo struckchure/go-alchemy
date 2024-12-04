@@ -83,6 +83,55 @@ func (a *Authentication) Login() (err error) {
 		color.Green("  + %s", tmpl.OutputPath)
 	}
 
+	cfg, err := ReadYaml[Config]("alchemy.yaml")
+	if err != nil {
+		return err
+	}
+
+	componentConfig := Component{
+		Id: "Authentication",
+		Models: []Dependency{
+			{
+				Id:   "User",
+				Path: "prisma/schema.prisma",
+			},
+			{
+				Id:   "UserDao",
+				Path: "dao/user_dao.go",
+			},
+		},
+		Services: []Dependency{
+			{
+				Id:   "Login",
+				Path: "services/authentication_service.go",
+			},
+		},
+	}
+
+	prevComponentConfig, ok := lo.Find(
+		cfg.Components,
+		func(c Component) bool { return c.Id == "Authentication" },
+	)
+	if ok {
+		componentConfig.Models = lo.Uniq(append(componentConfig.Models, prevComponentConfig.Models...))
+		componentConfig.Services = lo.Uniq(append(componentConfig.Services, prevComponentConfig.Services...))
+
+		_, idx, ok := lo.FindIndexOf(
+			cfg.Components,
+			func(c Component) bool { return c.Id == "Authentication" },
+		)
+		if ok {
+			cfg.Components[idx] = componentConfig
+		}
+	} else {
+		cfg.Components = append(cfg.Components, componentConfig)
+	}
+
+	err = WriteYaml("alchemy.yaml", cfg)
+	if err != nil {
+		return err
+	}
+
 	return err
 }
 

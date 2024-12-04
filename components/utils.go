@@ -56,15 +56,14 @@ func GetModuleName() (*string, error) {
 	return nil, fmt.Errorf("module name not found in go.mod")
 }
 
-type Yaml struct{}
-
-func (y *Yaml) Read(fileName string, data interface{}) (*interface{}, error) {
+func ReadYaml[T any](fileName string) (*T, error) {
 	content, err := os.ReadFile(fileName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
 
-	err = yaml.Unmarshal(content, data)
+	var data T
+	err = yaml.Unmarshal(content, &data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal YAML: %w", err)
 	}
@@ -72,7 +71,7 @@ func (y *Yaml) Read(fileName string, data interface{}) (*interface{}, error) {
 	return &data, nil
 }
 
-func (y *Yaml) Write(fileName string, data interface{}) error {
+func WriteYaml(fileName string, data interface{}) error {
 	file, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		return err
@@ -88,10 +87,6 @@ func (y *Yaml) Write(fileName string, data interface{}) error {
 	}
 
 	return nil
-}
-
-func NewYaml() *Yaml {
-	return &Yaml{}
 }
 
 func FormatGoCode(code string) (*string, error) {
