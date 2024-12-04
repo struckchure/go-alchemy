@@ -7,11 +7,10 @@ import (
 	"strings"
 
 	"github.com/samber/lo"
-	"gopkg.in/yaml.v3"
 )
 
-// ModifyOrCreateEnvVar modifies or creates an environment variable in a .env file.
-func ModifyOrCreateEnvVar(envFilePath, key, value string) error {
+// WriteEnvVar modifies or creates an environment variable in a .env file.
+func WriteEnvVar(envFilePath, key, value string) error {
 	// Open the .env file or create it if it doesn't exist
 	file, err := os.OpenFile(envFilePath, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
@@ -64,42 +63,4 @@ func ModifyOrCreateEnvVar(envFilePath, key, value string) error {
 
 func GetDirectoryName() string {
 	return lo.Must(lo.Last(strings.Split(lo.Must(os.Getwd()), "/")))
-}
-
-type Yaml struct{}
-
-func (y *Yaml) Read(fileName string, data interface{}) (*interface{}, error) {
-	content, err := os.ReadFile(fileName)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read file: %w", err)
-	}
-
-	err = yaml.Unmarshal(content, data)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal YAML: %w", err)
-	}
-
-	return &data, nil
-}
-
-func (y *Yaml) Write(fileName string, data interface{}) error {
-	file, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE, 0644)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	encoder := yaml.NewEncoder(file)
-	encoder.SetIndent(2)
-
-	err = encoder.Encode(data)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func NewYaml() *Yaml {
-	return &Yaml{}
 }

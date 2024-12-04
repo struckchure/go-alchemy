@@ -116,7 +116,7 @@ var addCmd = &cobra.Command{
 
 		err := survey.AskOne(categoryPrompt, &categoryId)
 		if err != nil {
-			color.Red("Prompt failed: %s", err)
+			color.Red("%s", err)
 			return
 		}
 
@@ -127,13 +127,13 @@ var addCmd = &cobra.Command{
 
 		err = survey.AskOne(componentPrompt, &componentId)
 		if err != nil {
-			color.Red("Prompt failed: %s", err)
+			color.Red("%s", err)
 			return
 		}
 
 		err = alchemy.NewConfigService().Add(fmt.Sprintf("%s.%s", categoryId, componentId))
 		if err != nil {
-			color.Red("Prompt failed: %s", err)
+			color.Red("%s", err)
 			return
 		}
 	},

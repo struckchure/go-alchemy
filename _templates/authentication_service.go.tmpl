@@ -3,17 +3,22 @@ package services
 import (
 	"errors"
 
-	"github.com/struckchure/go-alchemy/orms/prisma"
-	"github.com/struckchure/go-alchemy/prisma/db"
+	"{{ .ModuleName }}/dao"
+	"{{ .ModuleName }}/prisma/db"
 )
 
 type IAuthenticationService interface {
+{{- if .Login }}
 	Login(LoginArgs) (*LoginResult, error)
+{{- end }}
+
+{{- if .Register }}
 	Register(RegisterArgs) (*RegisterResult, error)
+{{- end }}
 }
 
 type AuthenticationService struct {
-	userDao prisma.IUserDao
+	userDao dao.IUserDao
 }
 
 type Token struct {
@@ -21,18 +26,19 @@ type Token struct {
 	RefreshToken string `json:"refreshToken"`
 }
 
+func (a *AuthenticationService) passwordIsValid(plain string, hashed string) (bool, error) {
+	return plain == hashed, nil
+}
+
+{{- if .Login }}
 type LoginArgs struct {
 	Email    string
 	Password string
 }
 
 type LoginResult struct {
-	User   prisma.User `json:"user"`
-	Tokens Token       `json:"tokens"`
-}
-
-func (a *AuthenticationService) passwordIsValid(plain string, hashed string) (bool, error) {
-	return plain == hashed, nil
+	User   dao.User `json:"user"`
+	Tokens Token    `json:"tokens"`
 }
 
 func (a *AuthenticationService) Login(args LoginArgs) (*LoginResult, error) {
@@ -64,7 +70,9 @@ func (a *AuthenticationService) Login(args LoginArgs) (*LoginResult, error) {
 		Tokens: tokens,
 	}, nil
 }
+{{- end }}
 
+{{- if .Register }}
 type RegisterArgs struct {
 	FirstName *string
 	LastName  *string
@@ -73,12 +81,12 @@ type RegisterArgs struct {
 }
 
 type RegisterResult struct {
-	User   prisma.User `json:"user"`
+	User   dao.User `json:"user"`
 	Tokens Token       `json:"tokens"`
 }
 
 func (a *AuthenticationService) Register(args RegisterArgs) (*RegisterResult, error) {
-	user, err := a.userDao.Create(prisma.UserCreatePayload{
+	user, err := a.userDao.Create(dao.UserCreatePayload{
 		FirstName: args.FirstName,
 		LastName:  args.LastName,
 		Email:     args.Email,
@@ -98,9 +106,8 @@ func (a *AuthenticationService) Register(args RegisterArgs) (*RegisterResult, er
 		Tokens: tokens,
 	}, nil
 }
+{{- end }}
 
 func NewAuthenticationService(client *db.PrismaClient) IAuthenticationService {
-	return &AuthenticationService{
-		userDao: prisma.NewUserDao(client),
-	}
+	return &AuthenticationService{userDao: dao.NewUserDao(client)}
 }

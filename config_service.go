@@ -154,7 +154,7 @@ func (c *ConfigService) Init(args InitArgs) error {
 		return err
 	}
 
-	err = ModifyOrCreateEnvVar(".env", "DATABASE_URL", args.DatabaseUrl)
+	err = WriteEnvVar(".env", "DATABASE_URL", args.DatabaseUrl)
 	if err != nil {
 		color.Red("%s", err)
 

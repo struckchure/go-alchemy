@@ -30,13 +30,51 @@ func (a *Authentication) Setup(component string) (func() error, error) {
 }
 
 func (a *Authentication) Login() (err error) {
+	componentId := "Authentication.Login"
 	defer func() {
 		if err == nil {
-			color.Green("+ Authentication.Login")
+			color.Green("+ %s", componentId)
 		} else {
-			color.Red("x Authentication.Login")
+			color.Red("x %s", componentId)
 		}
 	}()
+
+	color.Green("Creating %s component", componentId)
+
+	moduleName, err := GetModuleName()
+	if err != nil {
+		return err
+	}
+
+	var tmpls []GenerateTmplArgs = []GenerateTmplArgs{
+		{
+			TmplPath:   "_templates/prisma_user_dao.go.tmpl",
+			OutputPath: "dao/user_dao.go",
+			GoFormat:   true,
+			Values: map[string]interface{}{
+				"ModuleName": moduleName,
+				"Login":      true,
+			},
+		},
+		{
+			TmplPath:   "_templates/authentication_service.go.tmpl",
+			OutputPath: "services/authentication_service.go",
+			GoFormat:   true,
+			Values: map[string]interface{}{
+				"ModuleName": moduleName,
+				"Login":      true,
+			},
+		},
+	}
+
+	for _, tmpl := range tmpls {
+		err := GenerateTmpl(tmpl)
+		if err != nil {
+			return err
+		}
+
+		color.Green("  + %s", tmpl.OutputPath)
+	}
 
 	return err
 }
