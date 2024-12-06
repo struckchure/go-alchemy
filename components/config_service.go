@@ -1,4 +1,4 @@
-package alchemy
+package components
 
 import (
 	"errors"
@@ -9,12 +9,12 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/samber/lo"
-	"github.com/struckchure/go-alchemy/components"
+	"github.com/struckchure/go-alchemy"
 	"gopkg.in/yaml.v3"
 )
 
-var CategoryMapping map[string]components.IAlchemyComponent = map[string]components.IAlchemyComponent{
-	"authentication": components.NewAuthentication(),
+var CategoryMapping map[string]IAlchemyComponent = map[string]IAlchemyComponent{
+	"authentication": NewAuthentication(),
 }
 
 type IConfigService interface {
@@ -78,14 +78,14 @@ func (c *ConfigService) provisionDatabase(databaseProvider string) error {
 	color.Green("Creating %s with Docker Compose", databaseProvider)
 	defer color.Green("Docker Compose file successfully generated")
 
-	err := components.GenerateTmpl(components.GenerateTmplArgs{
+	err := GenerateTmpl(GenerateTmplArgs{
 		TmplPath:   "_templates/docker-compose.yaml.tmpl",
 		OutputPath: "docker-compose.yaml",
 		Values: map[string]interface{}{
 			"ProjectName":      GetDirectoryName(),
 			"DatabaseProvider": strings.ToLower(databaseProvider),
 		},
-		Funcs: map[string]any{"removeSigns": RemoveNoneAlpha},
+		Funcs: map[string]any{"removeSigns": alchemy.RemoveNoneAlpha},
 	})
 	if err != nil {
 		return err
@@ -128,9 +128,9 @@ func (c *ConfigService) Init(args InitArgs) error {
 	args.DatabaseUrl = lo.Ternary(
 		args.DatabaseUrl != "",
 		args.DatabaseUrl,
-		fmt.Sprintf(`"postgresql://user:password@localhost:5432/%s?schema=public"`, RemoveNoneAlpha(config.ProjectName)),
+		fmt.Sprintf(`"postgresql://user:password@localhost:5432/%s?schema=public"`, alchemy.RemoveNoneAlpha(config.ProjectName)),
 	)
-	err = WriteEnvVar(".env", "DATABASE_URL", args.DatabaseUrl)
+	err = alchemy.WriteEnvVar(".env", "DATABASE_URL", args.DatabaseUrl)
 	if err != nil {
 		color.Red("%s", err)
 
@@ -212,7 +212,7 @@ func (c *ConfigService) Add(component string) error {
 		return errors.New("category is not available")
 	}
 
-	setupComponent := func(category components.IAlchemyComponent, id string) error {
+	setupComponent := func(category IAlchemyComponent, id string) error {
 		setup, err := category.Setup(id)
 		if err != nil {
 			return err
@@ -231,7 +231,7 @@ func (c *ConfigService) Add(component string) error {
 	category.Setup("no")
 
 	if componentId == "all" {
-		for _, componentId := range components.AuthenticationOptions {
+		for _, componentId := range AuthenticationOptions {
 			err := setupComponent(category, componentId)
 			if err != nil {
 				return err

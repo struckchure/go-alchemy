@@ -1,4 +1,4 @@
-package alchemy
+package components
 
 type Dependency struct {
 	Id   string `yaml:"Id"`
@@ -7,7 +7,6 @@ type Dependency struct {
 
 type Component struct {
 	Id       string       `yaml:"Id"`
-	Path     string       `yaml:"Path"`
 	Models   []Dependency `yaml:"Models"`
 	Services []Dependency `yaml:"Services"`
 }
