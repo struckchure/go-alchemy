@@ -32,8 +32,6 @@ func (c *ConfigService) setupPrisma(databaseProvider string) error {
 	color.Green("Downloading go prisma client")
 	cmd := exec.Command("go", "get", "github.com/steebchen/prisma-client-go")
 	if err := cmd.Run(); err != nil {
-		color.Red("%s", err)
-
 		return err
 	}
 
@@ -43,9 +41,7 @@ func (c *ConfigService) setupPrisma(databaseProvider string) error {
 		"init", "--datasource-provider", strings.ToLower(databaseProvider),
 	)
 	if out, err := cmd.CombinedOutput(); err != nil {
-		color.Red("%s", string(out))
-
-		return err
+		return errors.Join(err, errors.New(string(out)))
 	}
 
 	return nil
@@ -58,17 +54,12 @@ func (c *ConfigService) setupOrm(orm string, databaseProvider string) error {
 
 		err := c.setupPrisma(databaseProvider)
 		if err != nil {
-			color.Red("%s", err)
-
 			return err
 		}
 	case "gorm":
 		color.Green("Using GORM")
 	default:
-		err := errors.New("orm is not supported")
-		color.Red("%s", err)
-
-		return err
+		return errors.New("orm is not supported")
 	}
 
 	return nil
@@ -112,16 +103,12 @@ func (c *ConfigService) Init(args InitArgs) error {
 	if args.ShouldProvideDatabase {
 		err := c.provisionDatabase(config.Orm.DatabaseProvider)
 		if err != nil {
-			color.Red("%s", err)
-
 			return err
 		}
 	}
 
 	err := c.setupOrm(config.Orm.Name, config.Orm.DatabaseProvider)
 	if err != nil {
-		color.Red("%s", err)
-
 		return err
 	}
 
@@ -132,16 +119,12 @@ func (c *ConfigService) Init(args InitArgs) error {
 	)
 	err = alchemy.WriteEnvVar(".env", "DATABASE_URL", args.DatabaseUrl)
 	if err != nil {
-		color.Red("%s", err)
-
 		return err
 	}
 
 	fileName := "alchemy.yaml"
 	file, err := os.Create(fileName)
 	if err != nil {
-		color.Red("%s", err)
-
 		return err
 	}
 	defer file.Close()
@@ -151,8 +134,6 @@ func (c *ConfigService) Init(args InitArgs) error {
 
 	err = encoder.Encode(config)
 	if err != nil {
-		color.Red("%s", err)
-
 		return err
 	}
 
@@ -161,8 +142,6 @@ func (c *ConfigService) Init(args InitArgs) error {
 	color.Green("🛠️  Updating Go dependencies ...")
 	cmd := exec.Command("go", "mod", "tidy")
 	if err := cmd.Run(); err != nil {
-		color.Red("%s", err)
-
 		return err
 	}
 
