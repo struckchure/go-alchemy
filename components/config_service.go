@@ -141,8 +141,8 @@ func (c *ConfigService) Init(args InitArgs) error {
 
 	color.Green("🛠️  Updating Go dependencies ...")
 	cmd := exec.Command("go", "mod", "tidy")
-	if err := cmd.Run(); err != nil {
-		return err
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return errors.Join(err, errors.New(string(out)))
 	}
 
 	color.Green("🥂 You're all set!")

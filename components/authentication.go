@@ -1,11 +1,14 @@
 package components
 
 import (
+	"errors"
 	"fmt"
+	"os/exec"
 	"strings"
 
 	"github.com/fatih/color"
 	"github.com/samber/lo"
+	"github.com/struckchure/go-alchemy"
 )
 
 type IAuthentication interface {
@@ -29,7 +32,35 @@ func (a *Authentication) Setup(component string) (func() error, error) {
 		return nil, fmt.Errorf("component `%s` is not available", component)
 	}
 
+	err := a.PreSetup()
+	if err != nil {
+		return nil, err
+	}
+
 	return methods[component], nil
+}
+
+func (a *Authentication) PreSetup() error {
+	cmd := exec.Command("go", "get", "github.com/steebchen/prisma-client-go")
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return errors.Join(err, errors.New(string(out)))
+	}
+
+	return nil
+}
+
+func (a *Authentication) PostSetup() error {
+	cmd := exec.Command("go", "run", "github.com/steebchen/prisma-client-go", "db", "push")
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return errors.Join(err, errors.New(string(out)))
+	}
+
+	cmd = exec.Command("go", "mod", "tidy")
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return errors.Join(err, errors.New(string(out)))
+	}
+
+	return nil
 }
 
 func (a *Authentication) Login() (err error) {
@@ -44,7 +75,7 @@ func (a *Authentication) Login() (err error) {
 
 	color.Green("Creating %s component", componentId)
 
-	cfg, err := ReadYaml[Config]("alchemy.yaml")
+	cfg, err := alchemy.ReadYaml[Config]("alchemy.yaml")
 	if err != nil {
 		return err
 	}
@@ -143,12 +174,12 @@ func (a *Authentication) Login() (err error) {
 		cfg.Components = append(cfg.Components, componentConfig)
 	}
 
-	err = WriteYaml("alchemy.yaml", cfg)
+	err = alchemy.WriteYaml("alchemy.yaml", cfg)
 	if err != nil {
 		return err
 	}
 
-	return err
+	return a.PostSetup()
 }
 
 func (a *Authentication) Register() (err error) {
@@ -164,7 +195,7 @@ func (a *Authentication) Register() (err error) {
 
 	color.Green("Creating %s component", componentId)
 
-	cfg, err := ReadYaml[Config]("alchemy.yaml")
+	cfg, err := alchemy.ReadYaml[Config]("alchemy.yaml")
 	if err != nil {
 		return err
 	}
@@ -255,12 +286,12 @@ func (a *Authentication) Register() (err error) {
 		cfg.Components = append(cfg.Components, componentConfig)
 	}
 
-	err = WriteYaml("alchemy.yaml", cfg)
+	err = alchemy.WriteYaml("alchemy.yaml", cfg)
 	if err != nil {
 		return err
 	}
 
-	return err
+	return a.PostSetup()
 }
 
 func NewAuthentication() IAuthentication {

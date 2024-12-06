@@ -15,7 +15,6 @@ import (
 	"text/template"
 
 	"github.com/samber/lo"
-	"gopkg.in/yaml.v3"
 )
 
 func GetDirectoryName() string {
@@ -54,39 +53,6 @@ func GetModuleName() (*string, error) {
 	}
 
 	return nil, fmt.Errorf("module name not found in go.mod")
-}
-
-func ReadYaml[T any](fileName string) (*T, error) {
-	content, err := os.ReadFile(fileName)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read file: %w", err)
-	}
-
-	var data T
-	err = yaml.Unmarshal(content, &data)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal YAML: %w", err)
-	}
-
-	return &data, nil
-}
-
-func WriteYaml(fileName string, data interface{}) error {
-	file, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE, 0644)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	encoder := yaml.NewEncoder(file)
-	encoder.SetIndent(2)
-
-	err = encoder.Encode(data)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func FormatGoCode(code string) (*string, error) {
