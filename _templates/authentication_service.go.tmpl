@@ -44,6 +44,10 @@ type LoginResult struct {
 func (a *AuthenticationService) Login(args LoginArgs) (*LoginResult, error) {
 	user, err := a.userDao.GetByEmail(args.Email)
 	if err != nil {
+		if errors.Is(db.ErrNotFound, err) {
+			return nil, errors.New("invalid credentials")
+		}
+
 		return nil, err
 	}
 
@@ -93,6 +97,10 @@ func (a *AuthenticationService) Register(args RegisterArgs) (*RegisterResult, er
 		Password:  args.Password,
 	})
 	if err != nil {
+		if _, isUniqueConstraint := db.IsErrUniqueConstraint(err); isUniqueConstraint {
+			return nil, errors.New("user already exist")
+		}
+
 		return nil, err
 	}
 
@@ -108,6 +116,6 @@ func (a *AuthenticationService) Register(args RegisterArgs) (*RegisterResult, er
 }
 {{- end }}
 
-func NewAuthenticationService(client *db.PrismaClient) IAuthenticationService {
-	return &AuthenticationService{userDao: dao.NewUserDao(client)}
+func NewAuthenticationService(userDao dao.IUserDao) IAuthenticationService {
+	return &AuthenticationService{userDao: userDao}
 }

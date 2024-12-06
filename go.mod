@@ -9,7 +9,7 @@ require (
 	github.com/samber/lo v1.47.0
 	github.com/shopspring/decimal v1.4.0
 	github.com/spf13/cobra v1.8.1
-	github.com/steebchen/prisma-client-go v0.44.0
+	github.com/steebchen/prisma-client-go v0.45.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 

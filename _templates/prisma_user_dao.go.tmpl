@@ -97,10 +97,6 @@ func (u *UserDao) Create(payload UserCreatePayload) (*User, error) {
 	).Exec(ctx)
 
 	if err != nil {
-		if _, isUnique := db.IsErrUniqueConstraint(err); isUnique {
-			return nil, alchemy.ErrDuplicateRecord
-		}
-
 		return nil, err
 	}
 

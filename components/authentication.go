@@ -1,7 +1,8 @@
 package components
 
 import (
-	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/samber/lo"
@@ -17,13 +18,15 @@ type IAuthentication interface {
 type Authentication struct{}
 
 func (a *Authentication) Setup(component string) (func() error, error) {
+	component = strings.ToLower(component)
+
 	methods := map[string]func() error{
 		"login":    a.Login,
 		"register": a.Register,
 	}
 
 	if !lo.HasKey(methods, component) {
-		return nil, errors.New("component is not available")
+		return nil, fmt.Errorf("component `%s` is not available", component)
 	}
 
 	return methods[component], nil
@@ -41,9 +44,31 @@ func (a *Authentication) Login() (err error) {
 
 	color.Green("Creating %s component", componentId)
 
+	cfg, err := ReadYaml[Config]("alchemy.yaml")
+	if err != nil {
+		return err
+	}
+
+	prevComponentConfig, componentExists := lo.Find(
+		cfg.Components,
+		func(c Component) bool { return c.Id == "Authentication" },
+	)
+
 	moduleName, err := GetModuleName()
 	if err != nil {
 		return err
+	}
+
+	values := map[string]interface{}{
+		"User":       true,
+		"ModuleName": moduleName,
+		"Login":      true,
+	}
+
+	if componentExists {
+		for _, s := range prevComponentConfig.Services {
+			values[s.Id] = true
+		}
 	}
 
 	var tmpls []GenerateTmplArgs = []GenerateTmplArgs{
@@ -83,11 +108,6 @@ func (a *Authentication) Login() (err error) {
 		color.Green("  + %s", tmpl.OutputPath)
 	}
 
-	cfg, err := ReadYaml[Config]("alchemy.yaml")
-	if err != nil {
-		return err
-	}
-
 	componentConfig := Component{
 		Id: "Authentication",
 		Models: []Dependency{
@@ -108,11 +128,7 @@ func (a *Authentication) Login() (err error) {
 		},
 	}
 
-	prevComponentConfig, ok := lo.Find(
-		cfg.Components,
-		func(c Component) bool { return c.Id == "Authentication" },
-	)
-	if ok {
+	if componentExists {
 		componentConfig.Models = lo.Uniq(append(componentConfig.Models, prevComponentConfig.Models...))
 		componentConfig.Services = lo.Uniq(append(componentConfig.Services, prevComponentConfig.Services...))
 
@@ -136,13 +152,113 @@ func (a *Authentication) Login() (err error) {
 }
 
 func (a *Authentication) Register() (err error) {
+	componentId := "Authentication.Register"
+
 	defer func() {
 		if err == nil {
-			color.Green("+ Authentication.Register")
+			color.Green("+ %s", componentId)
 		} else {
-			color.Red("x Authentication.Register")
+			color.Red("x %s", componentId)
 		}
 	}()
+
+	color.Green("Creating %s component", componentId)
+
+	cfg, err := ReadYaml[Config]("alchemy.yaml")
+	if err != nil {
+		return err
+	}
+
+	prevComponentConfig, componentExists := lo.Find(
+		cfg.Components,
+		func(c Component) bool { return c.Id == "Authentication" },
+	)
+
+	moduleName, err := GetModuleName()
+	if err != nil {
+		return err
+	}
+
+	values := map[string]interface{}{
+		"User":       true,
+		"ModuleName": moduleName,
+		"Register":   true,
+	}
+
+	if componentExists {
+		for _, s := range prevComponentConfig.Services {
+			values[s.Id] = true
+		}
+	}
+
+	var tmpls []GenerateTmplArgs = []GenerateTmplArgs{
+		{
+			TmplPath:   "_templates/schema.prisma.tmpl",
+			OutputPath: "prisma/schema.prisma",
+			Values:     values,
+		},
+		{
+			TmplPath:   "_templates/prisma_user_dao.go.tmpl",
+			OutputPath: "dao/user_dao.go",
+			GoFormat:   true,
+			Values:     values,
+		},
+		{
+			TmplPath:   "_templates/authentication_service.go.tmpl",
+			OutputPath: "services/authentication_service.go",
+			GoFormat:   true,
+			Values:     values,
+		},
+	}
+
+	for _, tmpl := range tmpls {
+		err := GenerateTmpl(tmpl)
+		if err != nil {
+			return err
+		}
+
+		color.Green("  + %s", tmpl.OutputPath)
+	}
+
+	componentConfig := Component{
+		Id: "Authentication",
+		Models: []Dependency{
+			{
+				Id:   "User",
+				Path: "prisma/schema.prisma",
+			},
+			{
+				Id:   "UserDao",
+				Path: "dao/user_dao.go",
+			},
+		},
+		Services: []Dependency{
+			{
+				Id:   "Register",
+				Path: "services/authentication_service.go",
+			},
+		},
+	}
+
+	if componentExists {
+		componentConfig.Models = lo.Uniq(append(componentConfig.Models, prevComponentConfig.Models...))
+		componentConfig.Services = lo.Uniq(append(componentConfig.Services, prevComponentConfig.Services...))
+
+		_, idx, ok := lo.FindIndexOf(
+			cfg.Components,
+			func(c Component) bool { return c.Id == "Authentication" },
+		)
+		if ok {
+			cfg.Components[idx] = componentConfig
+		}
+	} else {
+		cfg.Components = append(cfg.Components, componentConfig)
+	}
+
+	err = WriteYaml("alchemy.yaml", cfg)
+	if err != nil {
+		return err
+	}
 
 	return err
 }

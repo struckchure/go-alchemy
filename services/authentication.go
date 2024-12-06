@@ -38,6 +38,10 @@ func (a *AuthenticationService) passwordIsValid(plain string, hashed string) (bo
 func (a *AuthenticationService) Login(args LoginArgs) (*LoginResult, error) {
 	user, err := a.userDao.GetByEmail(args.Email)
 	if err != nil {
+		if errors.Is(db.ErrNotFound, err) {
+			return nil, errors.New("invalid credentials")
+		}
+
 		return nil, err
 	}
 
@@ -85,6 +89,10 @@ func (a *AuthenticationService) Register(args RegisterArgs) (*RegisterResult, er
 		Password:  args.Password,
 	})
 	if err != nil {
+		if _, isUniqueConstraint := db.IsErrUniqueConstraint(err); isUniqueConstraint {
+			return nil, errors.New("user already exist")
+		}
+
 		return nil, err
 	}
 
@@ -99,8 +107,6 @@ func (a *AuthenticationService) Register(args RegisterArgs) (*RegisterResult, er
 	}, nil
 }
 
-func NewAuthenticationService(client *db.PrismaClient) IAuthenticationService {
-	return &AuthenticationService{
-		userDao: prisma.NewUserDao(client),
-	}
+func NewAuthenticationService(userDao prisma.IUserDao) IAuthenticationService {
+	return &AuthenticationService{userDao: userDao}
 }

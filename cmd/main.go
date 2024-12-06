@@ -107,7 +107,7 @@ var addCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		var (
 			categoryId  string
-			componentId string = "all"
+			componentId string
 		)
 
 		if len(args) > 0 {
