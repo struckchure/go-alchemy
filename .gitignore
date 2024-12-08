@@ -31,5 +31,4 @@ go.work
 .DS_Store
 
 local
-prisma
 !orms/prisma
