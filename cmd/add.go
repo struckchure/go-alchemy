@@ -17,6 +17,12 @@ var AddCmd = &cobra.Command{
 	Short: "Add new component",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		root, err := cmd.Flags().GetString("root")
+		if err != nil {
+			color.Red("%s", err)
+			return
+		}
+
 		var (
 			categoryId  string
 			componentId string
@@ -57,7 +63,12 @@ var AddCmd = &cobra.Command{
 		categoryId = lo.Capitalize(categoryId)
 		componentId = lo.Capitalize(componentId)
 
-		err := components.NewConfigService().Add(fmt.Sprintf("%s.%s", categoryId, componentId))
+		err = components.NewConfigService().Add(
+			components.AddArgs{
+				Component: fmt.Sprintf("%s.%s", categoryId, componentId),
+				Root:      root,
+			},
+		)
 		if err != nil {
 			color.Red("%s", err)
 			return

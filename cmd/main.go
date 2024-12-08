@@ -16,6 +16,8 @@ func main() {
 	rootCmd.AddCommand(AddCmd)
 	rootCmd.AddCommand(RemoveCmd)
 
+	rootCmd.PersistentFlags().StringP("root", "r", ".", "Project root")
+
 	if err := rootCmd.Execute(); err != nil {
 		color.Red("%s", err)
 		return
