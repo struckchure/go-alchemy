@@ -28,8 +28,8 @@ go.work
 
 .env
 
-prisma/
 .DS_Store
 
-docker-compose.yaml
-alchemy.yaml
+local
+./prisma
+!orms/prisma
