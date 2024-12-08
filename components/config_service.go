@@ -14,7 +14,7 @@ import (
 )
 
 var CategoryMapping map[string]IAlchemyComponent = map[string]IAlchemyComponent{
-	"authentication": NewAuthentication(),
+	"Authentication": NewAuthentication(),
 }
 
 type IConfigService interface {
@@ -48,15 +48,15 @@ func (c *ConfigService) setupPrisma(databaseProvider string) error {
 }
 
 func (c *ConfigService) setupOrm(orm string, databaseProvider string) error {
-	switch strings.ToLower(orm) {
-	case "prisma":
+	switch orm {
+	case "Prisma":
 		color.Green("Using Prisma ORM")
 
 		err := c.setupPrisma(databaseProvider)
 		if err != nil {
 			return err
 		}
-	case "gorm":
+	case "Gorm":
 		color.Green("Using GORM")
 	default:
 		return errors.New("orm is not supported")
@@ -172,8 +172,6 @@ $ alchemy add Authentication.Login
 //
 // The reference is case insenstive, we just like how the casing looks 🙂
 func (c *ConfigService) Add(component string) error {
-	component = strings.ToLower(component)
-
 	var (
 		categoryId  string
 		componentId string
@@ -186,6 +184,9 @@ func (c *ConfigService) Add(component string) error {
 		categoryId = component
 		componentId = "all"
 	}
+
+	categoryId = lo.Capitalize(categoryId)
+	componentId = lo.Capitalize(componentId)
 
 	if !lo.HasKey(CategoryMapping, categoryId) {
 		return errors.New("category is not available")
@@ -209,7 +210,7 @@ func (c *ConfigService) Add(component string) error {
 	category := CategoryMapping[categoryId]
 	category.Setup("no")
 
-	if componentId == "all" {
+	if componentId == "All" {
 		for _, componentId := range AuthenticationOptions {
 			err := setupComponent(category, componentId)
 			if err != nil {

@@ -54,6 +54,9 @@ var AddCmd = &cobra.Command{
 			}
 		}
 
+		categoryId = lo.Capitalize(categoryId)
+		componentId = lo.Capitalize(componentId)
+
 		err := components.NewConfigService().Add(fmt.Sprintf("%s.%s", categoryId, componentId))
 		if err != nil {
 			color.Red("%s", err)
