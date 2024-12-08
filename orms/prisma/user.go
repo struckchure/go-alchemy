@@ -2,8 +2,8 @@ package prisma
 
 import (
 	"context"
+	"errors"
 
-	"github.com/struckchure/go-alchemy"
 	"github.com/struckchure/go-alchemy/prisma/db"
 )
 
@@ -90,7 +90,7 @@ func (u *UserDao) Create(payload UserCreatePayload) (*User, error) {
 
 	if err != nil {
 		if _, isUnique := db.IsErrUniqueConstraint(err); isUnique {
-			return nil, alchemy.ErrDuplicateRecord
+			return nil, errors.New("record already exist")
 		}
 
 		return nil, err
