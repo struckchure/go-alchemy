@@ -15,6 +15,7 @@ import (
 	"text/template"
 
 	"github.com/samber/lo"
+	"github.com/struckchure/go-alchemy"
 )
 
 func GetDirectoryName() string {
@@ -232,6 +233,35 @@ func GenerateTmpl(args GenerateTmplArgs) error {
 		if err != nil {
 			return fmt.Errorf("failed to write formatted content to file: %w", err)
 		}
+	}
+
+	return nil
+}
+
+func UpdateComponentConfig(componentConfig Component) error {
+	cfg, err := alchemy.ReadYaml[Config]("alchemy.yaml")
+	if err != nil {
+		return err
+	}
+
+	currentComponentConfig, componentExists := lo.Find(
+		cfg.Components,
+		func(c Component) bool { return c.Id == componentConfig.Id },
+	)
+
+	if componentExists {
+		componentConfig.Models = lo.Uniq(append(componentConfig.Models, currentComponentConfig.Models...))
+		componentConfig.Services = lo.Uniq(append(componentConfig.Services, currentComponentConfig.Services...))
+
+		_, idx, ok := lo.FindIndexOf(
+			cfg.Components,
+			func(c Component) bool { return c.Id == componentConfig.Id },
+		)
+		if ok {
+			cfg.Components[idx] = componentConfig
+		}
+	} else {
+		cfg.Components = append(cfg.Components, componentConfig)
 	}
 
 	return nil

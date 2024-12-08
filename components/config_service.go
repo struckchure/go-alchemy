@@ -18,24 +18,29 @@ var CategoryMapping map[string]IAlchemyComponent = map[string]IAlchemyComponent{
 }
 
 type IConfigService interface {
-	setupOrm(string, string) error
-	provisionDatabase(string) error
+	setupOrm(Config) error
+	provisionDatabase(string, string) error
 
 	Init(InitArgs) error
-	Add(string) error
+	Add(AddArgs) error
 	Remove() error
 }
 
 type ConfigService struct{}
 
-func (c *ConfigService) setupPrisma(databaseProvider string) error {
+func (c *ConfigService) setupPrisma(databaseProvider string, directory string) error {
 	color.Green("Downloading go prisma client")
 	cmd := exec.Command("go", "get", "github.com/steebchen/prisma-client-go")
-	if err := cmd.Run(); err != nil {
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return errors.Join(err, errors.New(string(out)))
+	}
+
+	color.Green("Initializing new prisma project [%s]", directory)
+	err := os.Chdir(directory)
+	if err != nil {
 		return err
 	}
 
-	color.Green("Initializing new prisma project")
 	cmd = exec.Command(
 		"go", "run", "github.com/steebchen/prisma-client-go",
 		"init", "--datasource-provider", strings.ToLower(databaseProvider),
@@ -47,12 +52,12 @@ func (c *ConfigService) setupPrisma(databaseProvider string) error {
 	return nil
 }
 
-func (c *ConfigService) setupOrm(orm string, databaseProvider string) error {
-	switch orm {
+func (c *ConfigService) setupOrm(cfg Config) error {
+	switch cfg.Orm.Name {
 	case "Prisma":
 		color.Green("Using Prisma ORM")
 
-		err := c.setupPrisma(databaseProvider)
+		err := c.setupPrisma(cfg.Orm.DatabaseProvider, cfg.Root)
 		if err != nil {
 			return err
 		}
@@ -65,13 +70,18 @@ func (c *ConfigService) setupOrm(orm string, databaseProvider string) error {
 	return nil
 }
 
-func (c *ConfigService) provisionDatabase(databaseProvider string) error {
-	color.Green("Creating %s with Docker Compose", databaseProvider)
-	defer color.Green("Docker Compose file successfully generated")
+func (c *ConfigService) provisionDatabase(databaseProvider string, directory string) error {
+	outputFilePath, err := JoinURLsOrPaths(directory, "docker-compose.yaml")
+	if err != nil {
+		return err
+	}
 
-	err := GenerateTmpl(GenerateTmplArgs{
+	color.Green("Creating %s with Docker Compose", databaseProvider)
+	defer color.Green("Docker Compose file successfully generated [%s]", outputFilePath)
+
+	err = GenerateTmpl(GenerateTmplArgs{
 		TmplPath:   "_templates/docker-compose.yaml.tmpl",
-		OutputPath: "docker-compose.yaml",
+		OutputPath: outputFilePath,
 		Values: map[string]interface{}{
 			"ProjectName":      GetDirectoryName(),
 			"DatabaseProvider": strings.ToLower(databaseProvider),
@@ -101,13 +111,13 @@ func (c *ConfigService) Init(args InitArgs) error {
 	}
 
 	if args.ShouldProvideDatabase {
-		err := c.provisionDatabase(config.Orm.DatabaseProvider)
+		err := c.provisionDatabase(config.Orm.DatabaseProvider, config.Root)
 		if err != nil {
 			return err
 		}
 	}
 
-	err := c.setupOrm(config.Orm.Name, config.Orm.DatabaseProvider)
+	err := c.setupOrm(config)
 	if err != nil {
 		return err
 	}
@@ -165,23 +175,33 @@ $ alchemy add Authentication.Login
 	return nil
 }
 
+type AddArgs struct {
+	Component string
+	Root      string
+}
+
 // Adds single component to your project
 //
 //	`Authentication.Login` would be referring to only the login service
 //	`Authentication` would add all available features in the authentication category
 //
 // The reference is case insenstive, we just like how the casing looks 🙂
-func (c *ConfigService) Add(component string) error {
+func (c *ConfigService) Add(args AddArgs) error {
+	err := os.Chdir(args.Root)
+	if err != nil {
+		return err
+	}
+
 	var (
 		categoryId  string
 		componentId string
 	)
 
-	if len(strings.Split(component, ".")) > 1 {
-		categoryId = strings.SplitN(component, ".", 2)[0]
-		componentId = strings.SplitN(component, ".", 2)[1]
+	if len(strings.Split(args.Component, ".")) > 1 {
+		categoryId = strings.SplitN(args.Component, ".", 2)[0]
+		componentId = strings.SplitN(args.Component, ".", 2)[1]
 	} else {
-		categoryId = component
+		categoryId = args.Component
 		componentId = "all"
 	}
 

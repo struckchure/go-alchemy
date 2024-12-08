@@ -196,3 +196,11 @@ func JoinURLsOrPaths(base string, segments ...string) (string, error) {
 	allPaths := append([]string{base}, segments...)
 	return filepath.Join(allPaths...), nil
 }
+
+func FileExists(filePath string) bool {
+	info, err := os.Stat(filePath)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
+}
