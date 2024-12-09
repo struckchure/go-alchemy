@@ -32,3 +32,5 @@ go.work
 
 local
 !orms/prisma
+
+dist/
