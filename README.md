@@ -1,52 +1,162 @@
 # Alchemy (Go)
 
-Read to use components for backend developers.
+**Alchemy** provides ready-to-use components for backend developers, empowering them to build applications quickly and efficiently.
 
-# Philosophy (is that spelling correct? 🤔)
+---
 
-If frontend developers can do `npx shadcn add button`, backend developers should also be able to do `alchemy add authentication`.
+## ✨ Philosophy
 
-# Installation
-
-Clone the repo and build with this command;
+If frontend developers can do something as simple as:
 
 ```sh
-$ go build -o alchemy ./cmd
+npx shadcn add button
 ```
 
-# Usage
+Then backend developers should be able to do:
 
 ```sh
-alchemy-sandbox % alchemy init
+alchemy add authentication
+```
+
+Alchemy bridges this gap, providing a modular and intuitive toolset for backend development.
+
+---
+
+## 🛠️ Installation
+
+1. Clone the repository:
+
+   ```sh
+   git clone https://github.com/struckchure/go-alchemy.git
+   cd go-alchemy
+   ```
+
+2. Build the CLI tool:
+
+   ```sh
+   go build -o alchemy .
+   ```
+
+This will generate an executable named `alchemy`.
+
+---
+
+## 🚀 Usage
+
+### Initialize a New Alchemy Project
+
+Run the following command to initialize a new project:
+
+```sh
+alchemy init
+```
+
+You’ll be prompted to provide details interactively:
+
+```plaintext
 ? Provide alchemy component root:  .
 ? Choose ORM:  Prisma
 ? Choose Database Provider:  PostgreSQL
 ? Provision Database with Docker Compose:  Yes
-Creating PostgreSQL with Docker Compose
-Docker Compose file successfully generated
-Using Prisma ORM
-Downloading go prisma client
-Initializing new prisma project
+```
+
+Alchemy will:
+
+- Generate a Docker Compose file for the database.
+- Configure your ORM (e.g., Prisma).
+- Set up a new Prisma project.
+- Update your Go dependencies.
+
+**Example Output:**
+
+```plaintext
 ✨ Alchemy config has been generated!
-🛠️  Updating Go dependencies ...
+🛠️ Updating Go dependencies ...
 🥂 You're all set!
+```
 
-Start Database Service
+To start the database service, run:
+
+```sh
 $ docker compose up -d
+```
 
+---
 
-Interactively add component
-$ alchemy add Authentication // this will add all components from the authentication module
+### Add Components to Your Project
 
-Or add a specific component
-$ alchemy add Authentication.Login
+Alchemy allows you to add modular backend components.
 
-alchemy-sandbox % alchemy add
+#### **Interactively Add a Module**
+
+```sh
+$ alchemy add
+```
+
+**Example Interactive Flow:**
+
+```plaintext
 ? Component Category Authentication
 ? Select Components Login
 Creating Authentication.Login component
   + prisma/schema.prisma
-  + dao/user_dao.go
-  + services/authentication_service.go
+  + dao/user.go
+  + services/authentication.go
 + Authentication.Login
 ```
+
+#### **Add All Components from a Module**
+
+```sh
+$ alchemy add Authentication.All
+```
+
+This will add all components related to the `Authentication` module.
+
+#### **Add a Specific Component**
+
+```sh
+$ alchemy add Authentication.Login
+```
+
+This will add only the `Login` component from the `Authentication` module.
+
+> Component name is not case sensitive `Authentication.Login` is the same as `authentication.login`
+
+---
+
+## 📂 Example Project Structure
+
+After running the commands, your project might look like this:
+
+```
+.
+├── prisma
+│   ├── schema.prisma
+├── dao
+│   ├── user.go
+├── services
+│   ├── authentication.go
+├── docker-compose.yml
+├── go.mod
+├── go.sum
+├── main.go
+```
+
+---
+
+## 🧑‍💻 Contributions
+
+Contributions are welcome! Feel free to open issues or submit pull requests to enhance Alchemy.
+
+---
+
+## 📖 License
+
+This project is licensed under the [MIT License](LICENSE).
+
+---
+
+## 🛟 Support
+
+If you encounter any issues, please open an issue in the [GitHub repository](https://github.com/struckchure/go-alchemy).
