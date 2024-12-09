@@ -154,15 +154,9 @@ type GenerateTmplArgs struct {
 
 func GenerateTmpl(args GenerateTmplArgs) error {
 	var tmpl *template.Template
+	var tmplContent string
 
-	baseUrlFromEnv := os.Getenv("ALCHEMY_TMPL_DIR")
-	baseUrl := lo.Ternary(
-		baseUrlFromEnv != "",
-		baseUrlFromEnv,
-		"https://raw.githubusercontent.com/struckchure/go-alchemy/refs/heads/main/",
-	)
-
-	tmplPath, err := JoinURLsOrPaths(baseUrl, args.TmplPath)
+	tmplPath, err := JoinURLsOrPaths(alchemy.ALCHEMY_BASE_DIR, args.TmplPath)
 	if err != nil {
 		return err
 	}
@@ -174,24 +168,33 @@ func GenerateTmpl(args GenerateTmplArgs) error {
 		return err
 	}
 
+	tmplFileName := lo.Must(lo.Last(strings.Split(args.TmplPath, "/")))
 	if isRemoteURL {
-		tmplFileName := lo.Must(lo.Last(strings.Split(args.TmplPath, "/")))
 		content, err := ReadRemoteFile(args.TmplPath)
 		if err != nil {
 			return err
 		}
 
-		tmpl, err = template.New(tmplFileName).Funcs(template.FuncMap(args.Funcs)).Parse(*content)
-		if err != nil {
-			return err
-		}
+		tmplContent = *content
 	} else {
-		tmplFileName := lo.Must(lo.Last(strings.Split(args.TmplPath, "/")))
-
-		tmpl, err = template.New(tmplFileName).Funcs(template.FuncMap(args.Funcs)).ParseFiles(args.TmplPath)
+		content, err := os.ReadFile(args.TmplPath)
 		if err != nil {
 			return err
 		}
+
+		tmplContent = string(content)
+	}
+
+	parsedTmplContent, err := alchemy.Parse(tmplContent)
+	if err != nil {
+		return err
+	}
+
+	tmpl, err = template.New(tmplFileName).
+		Funcs(template.FuncMap(args.Funcs)).
+		Parse(*parsedTmplContent)
+	if err != nil {
+		return err
 	}
 
 	// Ensure the output directory exists

@@ -1,9 +1,11 @@
+// @alchemy replace package dao
 package prisma
 
 import (
 	"context"
 	"errors"
 
+	// @alchemy statement "{{ .ModuleName }}/prisma/db"
 	"github.com/struckchure/go-alchemy/prisma/db"
 )
 
@@ -32,6 +34,7 @@ func (User) FromModel(user *db.UserModel) *User {
 	}
 }
 
+// @alchemy block {{- if .Register }}
 type UserCreatePayload struct {
 	FirstName *string
 	LastName  *string
@@ -46,12 +49,18 @@ type UserUpdatePayload struct {
 	Password  *string
 }
 
+// @alchemy block {{- end }}
+
 type IUserDao interface {
 	List() ([]User, error)
+	// @alchemy block {{- if .Login }}
 	Get(string) (*User, error)
 	GetByEmail(string) (*User, error)
+	// @alchemy block {{- end }}
+	// @alchemy block {{- if .Register }}
 	Create(UserCreatePayload) (*User, error)
 	Update(string, UserUpdatePayload) (*User, error)
+	// @alchemy block {{- end }}
 	Delete(string) error
 }
 
@@ -63,6 +72,7 @@ func (u *UserDao) List() ([]User, error) {
 	panic("unimplemented")
 }
 
+// @alchemy block {{- if .Login }}
 func (u *UserDao) Get(id string) (*User, error) {
 	panic("unimplemented")
 }
@@ -78,6 +88,9 @@ func (u *UserDao) GetByEmail(email string) (*User, error) {
 	return User{}.FromModel(user), err
 }
 
+// @alchemy block {{- end }}
+
+// @alchemy block {{- if .Register }}
 func (u *UserDao) Create(payload UserCreatePayload) (*User, error) {
 	ctx := context.Background()
 
@@ -102,6 +115,8 @@ func (u *UserDao) Create(payload UserCreatePayload) (*User, error) {
 func (u *UserDao) Update(id string, payload UserUpdatePayload) (*User, error) {
 	panic("unimplemented")
 }
+
+// @alchemy block {{- end }}
 
 func (u *UserDao) Delete(id string) error {
 	panic("unimplemented")

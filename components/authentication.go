@@ -105,15 +105,15 @@ func (a *Authentication) Login() (err error) {
 
 	var tmpls []GenerateTmplArgs = []GenerateTmplArgs{
 		{
-			TmplPath:   "_templates/schema.prisma.tmpl",
+			TmplPath:   "prisma/schema.prisma",
 			OutputPath: "prisma/schema.prisma",
 			Values: map[string]interface{}{
 				"User": true,
 			},
 		},
 		{
-			TmplPath:   "_templates/prisma_user_dao.go.tmpl",
-			OutputPath: "dao/user_dao.go",
+			TmplPath:   "orms/prisma/user.go",
+			OutputPath: "dao/user.go",
 			GoFormat:   true,
 			Values: map[string]interface{}{
 				"ModuleName": moduleName,
@@ -121,8 +121,8 @@ func (a *Authentication) Login() (err error) {
 			},
 		},
 		{
-			TmplPath:   "_templates/authentication_service.go.tmpl",
-			OutputPath: "services/authentication_service.go",
+			TmplPath:   "services/authentication.go",
+			OutputPath: "services/authentication.go",
 			GoFormat:   true,
 			Values: map[string]interface{}{
 				"ModuleName": moduleName,
@@ -149,13 +149,13 @@ func (a *Authentication) Login() (err error) {
 			},
 			{
 				Id:   "UserDao",
-				Path: "dao/user_dao.go",
+				Path: "dao/user.go",
 			},
 		},
 		Services: []Dependency{
 			{
 				Id:   "Login",
-				Path: "services/authentication_service.go",
+				Path: "services/authentication.go",
 			},
 		},
 	})
@@ -208,19 +208,19 @@ func (a *Authentication) Register() (err error) {
 
 	var tmpls []GenerateTmplArgs = []GenerateTmplArgs{
 		{
-			TmplPath:   "_templates/schema.prisma.tmpl",
+			TmplPath:   "prisma/schema.prisma",
 			OutputPath: "prisma/schema.prisma",
 			Values:     values,
 		},
 		{
-			TmplPath:   "_templates/prisma_user_dao.go.tmpl",
-			OutputPath: "dao/user_dao.go",
+			TmplPath:   "orms/prisma/user.go",
+			OutputPath: "dao/user.go",
 			GoFormat:   true,
 			Values:     values,
 		},
 		{
-			TmplPath:   "_templates/authentication_service.go.tmpl",
-			OutputPath: "services/authentication_service.go",
+			TmplPath:   "services/authentication.go",
+			OutputPath: "services/authentication.go",
 			GoFormat:   true,
 			Values:     values,
 		},
@@ -244,13 +244,13 @@ func (a *Authentication) Register() (err error) {
 			},
 			{
 				Id:   "UserDao",
-				Path: "dao/user_dao.go",
+				Path: "dao/user.go",
 			},
 		},
 		Services: []Dependency{
 			{
 				Id:   "Register",
-				Path: "services/authentication_service.go",
+				Path: "services/authentication.go",
 			},
 		},
 	})
