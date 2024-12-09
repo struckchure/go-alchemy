@@ -80,7 +80,7 @@ func (c *ConfigService) provisionDatabase(databaseProvider string, directory str
 	defer color.Green("Docker Compose file successfully generated [%s]", outputFilePath)
 
 	err = GenerateTmpl(GenerateTmplArgs{
-		TmplPath:   "_templates/docker-compose.yaml.tmpl",
+		TmplPath:   "docker-compose.yaml",
 		OutputPath: outputFilePath,
 		Values: map[string]interface{}{
 			"ProjectName":      GetDirectoryName(),
