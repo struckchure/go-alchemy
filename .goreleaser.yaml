@@ -101,19 +101,5 @@ release:
   # Templates: allowed.
   name_template: "{{.ProjectName}}-v{{.Version}} {{.Env.USER}}"
 
-  # You can disable this pipe in order to not create the release on any SCM.
-  # Keep in mind that this might also break things that depend on the release
-  # URL, for instance, homebrew taps.
-  #
-  # Templates: allowed.
-  disable: true
-
-  # Set this to true if you want to disable just the artifact upload to the SCM.
-  # If this is true, GoReleaser will still create the release with the
-  # changelog, but won't upload anything to it.
-  #
-  # Templates: allowed.
-  skip_upload: true
-
   # Upload metadata.json and artifacts.json to the release as well.
   include_meta: true
