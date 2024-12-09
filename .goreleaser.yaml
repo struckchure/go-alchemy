@@ -99,7 +99,7 @@ release:
   #
   # Default: '{{.Tag}}' ('{{.PrefixedTag}}' on Pro).
   # Templates: allowed.
-  name_template: "{{.ProjectName}}-v{{.Version}} {{.Env.USER}}"
+  name_template: "{{.Version}}"
 
   # Upload metadata.json and artifacts.json to the release as well.
   include_meta: true
