@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -10,7 +9,7 @@ import (
 var (
 	version   = "dev"
 	commit    = "none"
-	buildDate = time.Now().Format(time.DateTime)
+	buildDate = "unknown"
 )
 
 var VersionCmd = &cobra.Command{

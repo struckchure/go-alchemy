@@ -21,9 +21,7 @@ builds:
       - windows
       - darwin
     ldflags:
-      - -X cmd.version={{.Version}}
-      - -X cmd.commit={{.Commit}}
-      - -X cmd.buildDate={{.Date}}
+      - "-X 'cmd.version={{.Version}}' -X 'cmd.commit={{.Commit}}' -X 'cmd.buildDate={{.Date}}'"
 
 archives:
   - format: tar.gz
