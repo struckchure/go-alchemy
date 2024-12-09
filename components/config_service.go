@@ -9,7 +9,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/samber/lo"
-	"github.com/struckchure/go-alchemy"
+	"github.com/struckchure/go-alchemy/internals"
 	"gopkg.in/yaml.v3"
 )
 
@@ -86,7 +86,7 @@ func (c *ConfigService) provisionDatabase(databaseProvider string, directory str
 			"ProjectName":      GetDirectoryName(),
 			"DatabaseProvider": strings.ToLower(databaseProvider),
 		},
-		Funcs: map[string]any{"removeSigns": alchemy.RemoveNoneAlpha},
+		Funcs: map[string]any{"removeSigns": internals.RemoveNoneAlpha},
 	})
 	if err != nil {
 		return err
@@ -125,9 +125,9 @@ func (c *ConfigService) Init(args InitArgs) error {
 	args.DatabaseUrl = lo.Ternary(
 		args.DatabaseUrl != "",
 		args.DatabaseUrl,
-		fmt.Sprintf(`"postgresql://user:password@localhost:5432/%s?schema=public"`, alchemy.RemoveNoneAlpha(config.ProjectName)),
+		fmt.Sprintf(`"postgresql://user:password@localhost:5432/%s?schema=public"`, internals.RemoveNoneAlpha(config.ProjectName)),
 	)
-	err = alchemy.WriteEnvVar(".env", "DATABASE_URL", args.DatabaseUrl)
+	err = internals.WriteEnvVar(".env", "DATABASE_URL", args.DatabaseUrl)
 	if err != nil {
 		return err
 	}

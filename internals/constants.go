@@ -1,4 +1,4 @@
-package alchemy
+package internals
 
 import (
 	"os"

@@ -7,7 +7,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/samber/lo"
-	"github.com/struckchure/go-alchemy"
+	"github.com/struckchure/go-alchemy/internals"
 )
 
 type IAuthentication interface {
@@ -38,8 +38,8 @@ func (a *Authentication) Setup(component string) (func() error, error) {
 }
 
 func (a *Authentication) PreSetup() error {
-	if !alchemy.FileExists("alchemy.yaml") {
-		return alchemy.ErrAlchemyConfigNotFound
+	if !internals.FileExists("alchemy.yaml") {
+		return internals.ErrAlchemyConfigNotFound
 	}
 
 	cmd := exec.Command("go", "get", "github.com/steebchen/prisma-client-go")
@@ -76,7 +76,7 @@ func (a *Authentication) Login() (err error) {
 
 	color.Green("Creating %s component", componentId)
 
-	cfg, err := alchemy.ReadYaml[Config]("alchemy.yaml")
+	cfg, err := internals.ReadYaml[Config]("alchemy.yaml")
 	if err != nil {
 		return err
 	}
@@ -179,7 +179,7 @@ func (a *Authentication) Register() (err error) {
 
 	color.Green("Creating %s component", componentId)
 
-	cfg, err := alchemy.ReadYaml[Config]("alchemy.yaml")
+	cfg, err := internals.ReadYaml[Config]("alchemy.yaml")
 	if err != nil {
 		return err
 	}

@@ -15,7 +15,7 @@ import (
 	"text/template"
 
 	"github.com/samber/lo"
-	"github.com/struckchure/go-alchemy"
+	"github.com/struckchure/go-alchemy/internals"
 )
 
 func GetDirectoryName() string {
@@ -156,7 +156,7 @@ func GenerateTmpl(args GenerateTmplArgs) error {
 	var tmpl *template.Template
 	var tmplContent string
 
-	tmplPath, err := JoinURLsOrPaths(alchemy.ALCHEMY_BASE_DIR, args.TmplPath)
+	tmplPath, err := JoinURLsOrPaths(internals.ALCHEMY_BASE_DIR, args.TmplPath)
 	if err != nil {
 		return err
 	}
@@ -185,7 +185,7 @@ func GenerateTmpl(args GenerateTmplArgs) error {
 		tmplContent = string(content)
 	}
 
-	parsedTmplContent, err := alchemy.Parse(tmplContent)
+	parsedTmplContent, err := internals.Parse(tmplContent)
 	if err != nil {
 		return err
 	}
@@ -242,7 +242,7 @@ func GenerateTmpl(args GenerateTmplArgs) error {
 }
 
 func UpdateComponentConfig(componentConfig Component) error {
-	cfg, err := alchemy.ReadYaml[Config]("alchemy.yaml")
+	cfg, err := internals.ReadYaml[Config]("alchemy.yaml")
 	if err != nil {
 		return err
 	}
