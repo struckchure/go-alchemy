@@ -15,7 +15,7 @@ npx shadcn add button
 Then backend developers should be able to do:
 
 ```sh
-alchemy add authentication
+go-alchemy add authentication
 ```
 
 Alchemy bridges this gap, providing a modular and intuitive toolset for backend development.
@@ -49,7 +49,7 @@ Or download binaries from [release page](https://github.com/struckchure/go-alche
 Run the following command to initialize a new project:
 
 ```sh
-alchemy init
+go-alchemy init
 ```
 
 You’ll be prompted to provide details interactively:
@@ -91,7 +91,7 @@ Alchemy allows you to add modular backend components.
 #### **Interactively Add a Module**
 
 ```sh
-$ alchemy add
+$ go-alchemy add
 ```
 
 **Example Interactive Flow:**
@@ -109,7 +109,7 @@ Creating Authentication.Login component
 #### **Add All Components from a Module**
 
 ```sh
-$ alchemy add Authentication.All
+$ go-alchemy add Authentication.All
 ```
 
 This will add all components related to the `Authentication` module.
@@ -117,7 +117,7 @@ This will add all components related to the `Authentication` module.
 #### **Add a Specific Component**
 
 ```sh
-$ alchemy add Authentication.Login
+$ go-alchemy add Authentication.Login
 ```
 
 This will add only the `Login` component from the `Authentication` module.

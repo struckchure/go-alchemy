@@ -166,10 +166,10 @@ $ docker compose up -d
 
 	color.Green(`
 Interactively add component
-$ alchemy add Authentication // this will add all components from the authentication module
+$ go-alchemy add Authentication // this will add all components from the authentication module
 
 Or add a specific component
-$ alchemy add Authentication.Login
+$ go-alchemy add Authentication.Login
 	`)
 
 	return nil

@@ -3,8 +3,8 @@ package cmd
 import "github.com/spf13/cobra"
 
 var RootCmd = &cobra.Command{
-	Use:   "alchemy",
-	Short: "Alchemy CLI",
+	Use:   "go-alchemy",
+	Short: "Golang Alchemy CLI",
 }
 
 func init() {
