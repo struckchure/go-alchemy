@@ -52,8 +52,6 @@ changelog:
     - title: "Docs"
       regexp: '^.*?(doc|docs)(\([[:word:]]+\))??!?:.+$'
       order: 2
-    - title: Others
-      order: 999
 
 release:
   # Repo in which the release will be created.
