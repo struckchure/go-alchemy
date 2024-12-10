@@ -34,8 +34,8 @@ type IUserDao interface {
 	Get(string) (User, error)
 	GetByEmail(string) (User, error)
 	GetByUsername(string) (User, error)
-	Create(UserCreatePayload) (*User, error)
-	Update(UserUpdatePayload) (*User, error)
+	Create(UserCreatePayload) (User, error)
+	Update(UserUpdatePayload) (User, error)
 	Delete(string) error
 }
 
@@ -66,9 +66,8 @@ func (u *UserDao) GetByUsername(username string) (user User, err error) {
 
 	return user, err
 }
-
-func (u *UserDao) Create(payload UserCreatePayload) (*User, error) {
-	user := User{
+func (u *UserDao) Create(payload UserCreatePayload) (user User, err error) {
+	user = User{
 		FirstName: payload.FirstName,
 		LastName:  payload.LastName,
 		Email:     payload.Email,
@@ -76,24 +75,36 @@ func (u *UserDao) Create(payload UserCreatePayload) (*User, error) {
 		Password:  payload.Password,
 	}
 
-	err := u.client.Create(&user).Error
+	err = u.client.Create(&user).Error
 
-	return &user, err
+	return user, err
 }
 
-func (u *UserDao) Update(payload UserUpdatePayload) (*User, error) {
-	user := User{
-		Id:        *payload.Id,
-		FirstName: *payload.FirstName,
-		LastName:  *payload.LastName,
-		Email:     *payload.Email,
-		Username:  *payload.Username,
-		Password:  *payload.Password,
+func (u *UserDao) Update(payload UserUpdatePayload) (user User, err error) {
+	updates := make(map[string]interface{})
+	if payload.FirstName != nil {
+		updates["first_name"] = *payload.FirstName
+	}
+	if payload.LastName != nil {
+		updates["last_name"] = *payload.LastName
+	}
+	if payload.Email != nil {
+		updates["email"] = *payload.Email
+	}
+	if payload.Username != nil {
+		updates["username"] = *payload.Username
+	}
+	if payload.Password != nil {
+		updates["password"] = *payload.Password
 	}
 
-	err := u.client.Model(&User{}).Where("id = ?", user.Id).Updates(&user).Error
+	err = u.client.Model(&User{}).Where("id = ?", *payload.Id).Updates(updates).Error
 
-	return &user, err
+	if err == nil {
+		err = u.client.Where("id = ?", *payload.Id).First(&user).Error
+	}
+
+	return user, err
 }
 
 func (u *UserDao) Delete(id string) error {
