@@ -42,6 +42,18 @@ archives:
 
 changelog:
   sort: asc
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      order: 0
+    - title: "Bug fixes"
+      regexp: '^.*?(bug|fix)(\([[:word:]]+\))??!?:.+$'
+      order: 1
+    - title: "Docs"
+      regexp: '^.*?(doc|docs)(\([[:word:]]+\))??!?:.+$'
+      order: 2
+    - title: Others
+      order: 999
 
 release:
   # Repo in which the release will be created.
