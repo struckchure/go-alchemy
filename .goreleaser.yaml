@@ -91,22 +91,6 @@ release:
   # Default: `keep-existing`.
   mode: replace
 
-  # Header for the release body.
-  #
-  # Templates: allowed.
-  header: |
-    ## Some title ({{ .Date }})
-
-    Welcome to this new release!
-
-  # Footer for the release body.
-  #
-  # Templates: allowed.
-  footer: |
-    ## Thanks
-
-    Those were the changes on {{ .Tag }}!
-
   # You can change the name of the release.
   #
   # Default: '{{.Tag}}' ('{{.PrefixedTag}}' on Pro).
