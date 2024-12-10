@@ -91,7 +91,7 @@ release:
   # - `replace`: replace existing notes
   #
   # Default: `keep-existing`.
-  mode: append
+  mode: replace
 
   # Header for the release body.
   #
