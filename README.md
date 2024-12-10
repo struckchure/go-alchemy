@@ -24,26 +24,27 @@ Alchemy bridges this gap, providing a modular and intuitive toolset for backend 
 
 ## 🛠️ Installation
 
-1. Clone the repository:
+For Linux and MacOS
 
-   ```sh
-   git clone https://github.com/struckchure/go-alchemy.git
-   cd go-alchemy
-   ```
+```sh
+curl -fsSL https://raw.githubusercontent.com/struckchure/go-alchemy/main/scripts/install.sh | bash
+```
 
-2. Build the CLI tool:
+For Windows
 
-   ```sh
-   go build -o alchemy .
-   ```
+```sh
+irm https://raw.githubusercontent.com/struckchure/go-alchemy/main/scripts/install.ps1 | iex
+```
 
-This will generate an executable named `alchemy`.
+Or download binaries from [release page](https://github.com/struckchure/go-alchemy/releases)
 
 ---
 
 ## 🚀 Usage
 
 ### Initialize a New Alchemy Project
+
+> You current directory must be a Golang project with `go.mod` for things to work properly.
 
 Run the following command to initialize a new project:
 
