@@ -267,5 +267,5 @@ func UpdateComponentConfig(componentConfig Component) error {
 		cfg.Components = append(cfg.Components, componentConfig)
 	}
 
-	return nil
+	return internals.WriteYaml("alchemy.yaml", cfg)
 }
