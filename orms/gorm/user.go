@@ -49,19 +49,19 @@ func (u *UserDao) List() (users []User, err error) {
 	return users, err
 }
 
-func (u *UserDao) Get(id string) (user User, err error) {
+func (u *UserDao) Get(id string) (user *User, err error) {
 	err = u.client.Model(&User{}).Where("id = ?", id).First(&user).Error
 
 	return user, err
 }
 
-func (u *UserDao) GetByEmail(email string) (user User, err error) {
+func (u *UserDao) GetByEmail(email string) (user *User, err error) {
 	err = u.client.Model(&User{}).Where("email = ?", email).First(&user).Error
 
 	return user, err
 }
 
-func (u *UserDao) GetByUsername(username string) (user User, err error) {
+func (u *UserDao) GetByUsername(username string) (user *User, err error) {
 	err = u.client.Model(&User{}).Where("username = ?", username).First(&user).Error
 
 	return user, err
