@@ -5,6 +5,7 @@ go 1.22.0
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/fatih/color v1.18.0
+	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/joho/godotenv v1.5.1
 	github.com/samber/lo v1.47.0
 	github.com/shopspring/decimal v1.4.0
