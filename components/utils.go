@@ -14,6 +14,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/fatih/color"
 	"github.com/samber/lo"
 	"github.com/struckchure/go-alchemy/internals"
 )
@@ -144,7 +145,8 @@ func JoinURLsOrPaths(base string, segments ...string) (string, error) {
 	return filepath.Join(allPaths...), nil
 }
 
-type GenerateTmplArgs struct {
+type GenerateSingleTmplArgs struct {
+	Id         string
 	TmplPath   string
 	OutputPath string
 	Values     interface{}
@@ -152,7 +154,7 @@ type GenerateTmplArgs struct {
 	GoFormat   bool
 }
 
-func GenerateTmpl(args GenerateTmplArgs) error {
+func GenerateSingleTmpl(args GenerateSingleTmplArgs) error {
 	var tmpl *template.Template
 	var tmplContent string
 
@@ -241,6 +243,49 @@ func GenerateTmpl(args GenerateTmplArgs) error {
 	return nil
 }
 
+type GenerateMultipleTmplsArgs struct {
+	ComponentId string
+	Tmpls       []GenerateSingleTmplArgs
+	Values      map[string]interface{}
+}
+
+func GenerateMultipleTmpls(args GenerateMultipleTmplsArgs) error {
+	newComponentConfig := Component{Id: args.ComponentId}
+	values, err := MakeValues(args.ComponentId, args.Values)
+	if err != nil {
+		return err
+	}
+
+	args.Values = *values
+
+	for _, tmpl := range args.Tmpls {
+		tmpl.Values = args.Values
+		err := GenerateSingleTmpl(tmpl)
+		if err != nil {
+			return err
+		}
+
+		componentType := strings.SplitN(tmpl.Id, ".", 2)[0]
+		componentName := strings.SplitN(tmpl.Id, ".", 2)[1]
+		switch componentType {
+		case "Models":
+			newComponentConfig.Models = append(newComponentConfig.Models, Dependency{
+				Id:   componentName,
+				Path: tmpl.OutputPath,
+			})
+		case "Services":
+			newComponentConfig.Services = append(newComponentConfig.Services, Dependency{
+				Id:   componentName,
+				Path: tmpl.OutputPath,
+			})
+		}
+
+		color.Green("  + %s", tmpl.OutputPath)
+	}
+
+	return UpdateComponentConfig(newComponentConfig)
+}
+
 func UpdateComponentConfig(componentConfig Component) error {
 	cfg, err := internals.ReadYaml[Config]("alchemy.yaml")
 	if err != nil {
@@ -268,4 +313,26 @@ func UpdateComponentConfig(componentConfig Component) error {
 	}
 
 	return internals.WriteYaml("alchemy.yaml", cfg)
+}
+
+func MakeValues(componentId string, values map[string]interface{}) (*map[string]interface{}, error) {
+	cfg, err := internals.ReadYaml[Config]("alchemy.yaml")
+	if err != nil {
+		return nil, err
+	}
+	currentComponentConfig, componentExists := lo.Find(
+		cfg.Components,
+		func(c Component) bool { return c.Id == componentId },
+	)
+	if componentExists {
+		for _, s := range currentComponentConfig.Services {
+			values[s.Id] = true
+		}
+
+		for _, s := range currentComponentConfig.Models {
+			values[s.Id] = true
+		}
+	}
+
+	return &values, nil
 }
