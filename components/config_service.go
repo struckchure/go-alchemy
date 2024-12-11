@@ -78,7 +78,7 @@ func (c *ConfigService) provisionDatabase(cfg Config) error {
 	color.Green("Creating %s with Docker Compose", cfg.Orm.DatabaseProvider)
 	defer color.Green("Docker Compose file successfully generated [%s]", outputFilePath)
 
-	err = GenerateTmpl(GenerateTmplArgs{
+	err = GenerateSingleTmpl(GenerateSingleTmplArgs{
 		TmplPath:   "docker-compose.yaml",
 		OutputPath: outputFilePath,
 		Values: map[string]interface{}{
