@@ -1,31 +1,31 @@
 package gorm
 
-import "gorm.io/gorm"
+import (
+	"database/sql"
+
+	"gorm.io/gorm"
+)
 
 type User struct {
-	Id        string `json:"id"`
-	FirstName string `json:"firstName" gorm:"column:first_name"`
-	LastName  string `json:"lastName" gorm:"column:last_name"`
-	Email     string `json:"email"`
-	Username  string `json:"username"`
-	Password  string `json:"-"`
-	CreatedAt string `json:"created_at" gorm:"column:created_at"`
+	Id        string         `json:"id"`
+	FirstName sql.NullString `json:"firstName" gorm:"column:first_name"`
+	LastName  sql.NullString `json:"lastName" gorm:"column:last_name"`
+	Email     string         `json:"email" gorm:"unique"`
+	Password  string         `json:"-" gorm:"<-:create"`
+	CreatedAt string         `json:"created_at" gorm:"column:created_at"`
 }
 
 type UserCreatePayload struct {
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
-	Email     string `json:"email"`
-	Username  string `json:"username"`
-	Password  string `json:"password"`
+	FirstName *string `json:"firstName"`
+	LastName  *string `json:"lastName"`
+	Email     string  `json:"email"`
+	Password  string  `json:"password"`
 }
 
 type UserUpdatePayload struct {
-	Id        *string `json:"id"`
 	FirstName *string `json:"firstName"`
 	LastName  *string `json:"lastName"`
 	Email     *string `json:"email"`
-	Username  *string `json:"username"`
 	Password  *string `json:"password"`
 }
 
@@ -35,7 +35,7 @@ type IUserDao interface {
 	GetByEmail(string) (User, error)
 	GetByUsername(string) (User, error)
 	Create(UserCreatePayload) (User, error)
-	Update(UserUpdatePayload) (User, error)
+	Update(string, UserUpdatePayload) (User, error)
 	Delete(string) error
 }
 
@@ -68,10 +68,9 @@ func (u *UserDao) GetByUsername(username string) (user User, err error) {
 }
 func (u *UserDao) Create(payload UserCreatePayload) (user User, err error) {
 	user = User{
-		FirstName: payload.FirstName,
-		LastName:  payload.LastName,
+		FirstName: sql.NullString{String: *payload.FirstName, Valid: payload.FirstName != nil},
+		LastName:  sql.NullString{String: *payload.LastName, Valid: payload.LastName != nil},
 		Email:     payload.Email,
-		Username:  payload.Username,
 		Password:  payload.Password,
 	}
 
@@ -80,7 +79,7 @@ func (u *UserDao) Create(payload UserCreatePayload) (user User, err error) {
 	return user, err
 }
 
-func (u *UserDao) Update(payload UserUpdatePayload) (user User, err error) {
+func (u *UserDao) Update(id string, payload UserUpdatePayload) (user User, err error) {
 	updates := make(map[string]interface{})
 	if payload.FirstName != nil {
 		updates["first_name"] = *payload.FirstName
@@ -91,17 +90,14 @@ func (u *UserDao) Update(payload UserUpdatePayload) (user User, err error) {
 	if payload.Email != nil {
 		updates["email"] = *payload.Email
 	}
-	if payload.Username != nil {
-		updates["username"] = *payload.Username
-	}
 	if payload.Password != nil {
 		updates["password"] = *payload.Password
 	}
 
-	err = u.client.Model(&User{}).Where("id = ?", *payload.Id).Updates(updates).Error
+	err = u.client.Model(&User{}).Where("id = ?", id).Updates(updates).Error
 
 	if err == nil {
-		err = u.client.Where("id = ?", *payload.Id).First(&user).Error
+		err = u.client.Where("id = ?", id).First(&user).Error
 	}
 
 	return user, err
