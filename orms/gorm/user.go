@@ -1,41 +1,29 @@
+// @alchemy replace package dao
 package gorm
 
 import (
-	"database/sql"
-
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type User struct {
-	Id        string         `json:"id"`
-	FirstName sql.NullString `json:"firstName" gorm:"column:first_name"`
-	LastName  sql.NullString `json:"lastName" gorm:"column:last_name"`
-	Email     string         `json:"email" gorm:"unique"`
-	Password  string         `json:"-" gorm:"<-:create"`
-	CreatedAt string         `json:"created_at" gorm:"column:created_at"`
-}
-
-type UserCreatePayload struct {
-	FirstName *string `json:"firstName"`
-	LastName  *string `json:"lastName"`
-	Email     string  `json:"email"`
-	Password  string  `json:"password"`
-}
-
-type UserUpdatePayload struct {
-	FirstName *string `json:"firstName"`
-	LastName  *string `json:"lastName"`
-	Email     *string `json:"email"`
-	Password  *string `json:"password"`
+	Id        string  `json:"id" gorm:"column:id,primaryKey"`
+	FirstName *string `json:"firstName" gorm:"column:first_name"`
+	LastName  *string `json:"lastName" gorm:"column:last_name"`
+	Email     string  `json:"email" gorm:"email,unique"`
+	Password  string  `json:"-" gorm:"password"`
 }
 
 type IUserDao interface {
 	List() ([]User, error)
-	Get(string) (User, error)
-	GetByEmail(string) (User, error)
-	GetByUsername(string) (User, error)
-	Create(UserCreatePayload) (User, error)
-	Update(string, UserUpdatePayload) (User, error)
+	// @alchemy block {{- if .Login }}
+	Get(string) (*User, error)
+	GetByEmail(string) (*User, error)
+	// @alchemy block {{- end }}
+	// @alchemy block {{- if .Register }}
+	Create(UserCreatePayload) (*User, error)
+	// @alchemy block {{- end }}
+	Update(string, UserUpdatePayload) (*User, error)
 	Delete(string) error
 }
 
@@ -45,59 +33,72 @@ type UserDao struct {
 
 func (u *UserDao) List() (users []User, err error) {
 	err = u.client.Model(&User{}).Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
 
 	return users, err
 }
 
-func (u *UserDao) Get(id string) (user User, err error) {
+func (u *UserDao) Get(id string) (user *User, err error) {
 	err = u.client.Model(&User{}).Where("id = ?", id).First(&user).Error
-
-	return user, err
-}
-
-func (u *UserDao) GetByEmail(email string) (user User, err error) {
-	err = u.client.Model(&User{}).Where("email = ?", email).First(&user).Error
-
-	return user, err
-}
-
-func (u *UserDao) GetByUsername(username string) (user User, err error) {
-	err = u.client.Model(&User{}).Where("username = ?", username).First(&user).Error
-
-	return user, err
-}
-func (u *UserDao) Create(payload UserCreatePayload) (user User, err error) {
-	user = User{
-		FirstName: sql.NullString{String: *payload.FirstName, Valid: payload.FirstName != nil},
-		LastName:  sql.NullString{String: *payload.LastName, Valid: payload.LastName != nil},
-		Email:     payload.Email,
-		Password:  payload.Password,
+	if err != nil {
+		return nil, err
 	}
+
+	return user, err
+}
+
+// @alchemy block {{- if .Login }}
+func (u *UserDao) GetByEmail(email string) (user *User, err error) {
+	err = u.client.Model(&User{}).Where("email = ?", email).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return user, err
+}
+
+// @alchemy block {{- end }}
+
+// @alchemy block {{- if .Register }}
+
+type UserCreatePayload struct {
+	FirstName *string `json:"firstName,omitempty"`
+	LastName  *string `json:"lastName,omitempty"`
+	Email     string  `json:"email,omitempty"`
+	Password  string  `json:"password,omitempty"`
+}
+
+func (u *UserDao) Create(payload UserCreatePayload) (user *User, err error) {
+	user.FirstName = payload.FirstName
+	user.LastName = payload.LastName
+	user.Email = payload.Email
+	user.Password = payload.Password
 
 	err = u.client.Create(&user).Error
+	if err != nil {
+		return nil, err
+	}
 
 	return user, err
 }
 
-func (u *UserDao) Update(id string, payload UserUpdatePayload) (user User, err error) {
-	updates := make(map[string]interface{})
-	if payload.FirstName != nil {
-		updates["first_name"] = *payload.FirstName
-	}
-	if payload.LastName != nil {
-		updates["last_name"] = *payload.LastName
-	}
-	if payload.Email != nil {
-		updates["email"] = *payload.Email
-	}
-	if payload.Password != nil {
-		updates["password"] = *payload.Password
-	}
+// @alchemy block {{- end }}
 
-	err = u.client.Model(&User{}).Where("id = ?", id).Updates(updates).Error
+type UserUpdatePayload struct {
+	FirstName *string `json:"firstName,omitempty"`
+	LastName  *string `json:"lastName,omitempty"`
+	Email     *string `json:"email,omitempty"`
+	Password  *string `json:"password,omitempty"`
+}
 
-	if err == nil {
-		err = u.client.Where("id = ?", id).First(&user).Error
+func (u *UserDao) Update(id string, payload UserUpdatePayload) (user *User, err error) {
+	err = u.client.
+		Clauses(clause.Returning{}).
+		Model(&user).Where("id = ?", id).Updates(payload).Error
+	if err != nil {
+		return nil, err
 	}
 
 	return user, err
