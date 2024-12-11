@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/samber/lo"
@@ -76,87 +77,18 @@ func (a *Authentication) Login() (err error) {
 
 	color.Green("Creating %s component", componentId)
 
-	cfg, err := internals.ReadYaml[Config]("alchemy.yaml")
-	if err != nil {
-		return err
-	}
-
-	currentComponentConfig, componentExists := lo.Find(
-		cfg.Components,
-		func(c Component) bool { return c.Id == "Authentication" },
-	)
-
 	moduleName, err := GetModuleName()
 	if err != nil {
 		return err
 	}
 
-	values := map[string]interface{}{
-		"User":       true,
-		"ModuleName": moduleName,
-		"Login":      true,
-	}
-
-	if componentExists {
-		for _, s := range currentComponentConfig.Services {
-			values[s.Id] = true
-		}
-	}
-
-	var tmpls []GenerateTmplArgs = []GenerateTmplArgs{
-		{
-			TmplPath:   "prisma/schema.prisma",
-			OutputPath: "prisma/schema.prisma",
-			Values: map[string]interface{}{
-				"User": true,
-			},
-		},
-		{
-			TmplPath:   "orms/prisma/user.go",
-			OutputPath: "dao/user.go",
-			GoFormat:   true,
-			Values: map[string]interface{}{
-				"ModuleName": moduleName,
-				"Login":      true,
-			},
-		},
-		{
-			TmplPath:   "services/authentication.go",
-			OutputPath: "services/authentication.go",
-			GoFormat:   true,
-			Values: map[string]interface{}{
-				"ModuleName": moduleName,
-				"Login":      true,
-			},
-		},
-	}
-
-	for _, tmpl := range tmpls {
-		err := GenerateTmpl(tmpl)
-		if err != nil {
-			return err
-		}
-
-		color.Green("  + %s", tmpl.OutputPath)
-	}
-
-	err = UpdateComponentConfig(Component{
-		Id: "Authentication",
-		Models: []Dependency{
-			{
-				Id:   "User",
-				Path: "prisma/schema.prisma",
-			},
-			{
-				Id:   "UserDao",
-				Path: "dao/user.go",
-			},
-		},
-		Services: []Dependency{
-			{
-				Id:   "Login",
-				Path: "services/authentication.go",
-			},
+	err = GenerateMultipleTmpls(GenerateMultipleTmplsArgs{
+		ComponentId: strings.Split(componentId, ".")[0],
+		Tmpls:       LoginTmpls,
+		Values: map[string]interface{}{
+			"Login":      true,
+			"User":       true,
+			"ModuleName": moduleName,
 		},
 	})
 	if err != nil {
@@ -179,79 +111,18 @@ func (a *Authentication) Register() (err error) {
 
 	color.Green("Creating %s component", componentId)
 
-	cfg, err := internals.ReadYaml[Config]("alchemy.yaml")
-	if err != nil {
-		return err
-	}
-
-	currentComponentConfig, componentExists := lo.Find(
-		cfg.Components,
-		func(c Component) bool { return c.Id == "Authentication" },
-	)
-
 	moduleName, err := GetModuleName()
 	if err != nil {
 		return err
 	}
 
-	values := map[string]interface{}{
-		"User":       true,
-		"ModuleName": moduleName,
-		"Register":   true,
-	}
-
-	if componentExists {
-		for _, s := range currentComponentConfig.Services {
-			values[s.Id] = true
-		}
-	}
-
-	var tmpls []GenerateTmplArgs = []GenerateTmplArgs{
-		{
-			TmplPath:   "prisma/schema.prisma",
-			OutputPath: "prisma/schema.prisma",
-			Values:     values,
-		},
-		{
-			TmplPath:   "orms/prisma/user.go",
-			OutputPath: "dao/user.go",
-			GoFormat:   true,
-			Values:     values,
-		},
-		{
-			TmplPath:   "services/authentication.go",
-			OutputPath: "services/authentication.go",
-			GoFormat:   true,
-			Values:     values,
-		},
-	}
-
-	for _, tmpl := range tmpls {
-		err := GenerateTmpl(tmpl)
-		if err != nil {
-			return err
-		}
-
-		color.Green("  + %s", tmpl.OutputPath)
-	}
-
-	err = UpdateComponentConfig(Component{
-		Id: "Authentication",
-		Models: []Dependency{
-			{
-				Id:   "User",
-				Path: "prisma/schema.prisma",
-			},
-			{
-				Id:   "UserDao",
-				Path: "dao/user.go",
-			},
-		},
-		Services: []Dependency{
-			{
-				Id:   "Register",
-				Path: "services/authentication.go",
-			},
+	err = GenerateMultipleTmpls(GenerateMultipleTmplsArgs{
+		ComponentId: strings.Split(componentId, ".")[0],
+		Tmpls:       RegisterTmpls,
+		Values: map[string]interface{}{
+			"Register":   true,
+			"User":       true,
+			"ModuleName": moduleName,
 		},
 	})
 	if err != nil {

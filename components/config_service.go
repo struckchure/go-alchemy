@@ -10,7 +10,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/samber/lo"
 	"github.com/struckchure/go-alchemy/internals"
-	"gopkg.in/yaml.v3"
 )
 
 var CategoryMapping map[string]IAlchemyComponent = map[string]IAlchemyComponent{
@@ -19,7 +18,7 @@ var CategoryMapping map[string]IAlchemyComponent = map[string]IAlchemyComponent{
 
 type IConfigService interface {
 	setupOrm(Config) error
-	provisionDatabase(string, string) error
+	provisionDatabase(Config) error
 
 	Init(InitArgs) error
 	Add(AddArgs) error
@@ -70,24 +69,30 @@ func (c *ConfigService) setupOrm(cfg Config) error {
 	return nil
 }
 
-func (c *ConfigService) provisionDatabase(databaseProvider string, directory string) error {
-	outputFilePath, err := JoinURLsOrPaths(directory, "docker-compose.yaml")
+func (c *ConfigService) provisionDatabase(cfg Config) error {
+	outputFilePath, err := JoinURLsOrPaths(cfg.Root, "docker-compose.yaml")
 	if err != nil {
 		return err
 	}
 
-	color.Green("Creating %s with Docker Compose", databaseProvider)
+	color.Green("Creating %s with Docker Compose", cfg.Orm.DatabaseProvider)
 	defer color.Green("Docker Compose file successfully generated [%s]", outputFilePath)
 
-	err = GenerateTmpl(GenerateTmplArgs{
+	err = GenerateSingleTmpl(GenerateSingleTmplArgs{
 		TmplPath:   "docker-compose.yaml",
 		OutputPath: outputFilePath,
 		Values: map[string]interface{}{
 			"ProjectName":      GetDirectoryName(),
-			"DatabaseProvider": strings.ToLower(databaseProvider),
+			"DatabaseProvider": strings.ToLower(cfg.Orm.DatabaseProvider),
 		},
 		Funcs: map[string]any{"removeSigns": internals.RemoveNoneAlpha},
 	})
+	if err != nil {
+		return err
+	}
+
+	databaseUrl := fmt.Sprintf(`"postgresql://user:password@localhost:5432/%s?schema=public"`, internals.RemoveNoneAlpha(cfg.ProjectName))
+	err = internals.WriteEnvVar(".env", "DATABASE_URL", databaseUrl)
 	if err != nil {
 		return err
 	}
@@ -111,7 +116,7 @@ func (c *ConfigService) Init(args InitArgs) error {
 	}
 
 	if args.ShouldProvideDatabase {
-		err := c.provisionDatabase(config.Orm.DatabaseProvider, config.Root)
+		err := c.provisionDatabase(config)
 		if err != nil {
 			return err
 		}
@@ -122,27 +127,7 @@ func (c *ConfigService) Init(args InitArgs) error {
 		return err
 	}
 
-	args.DatabaseUrl = lo.Ternary(
-		args.DatabaseUrl != "",
-		args.DatabaseUrl,
-		fmt.Sprintf(`"postgresql://user:password@localhost:5432/%s?schema=public"`, internals.RemoveNoneAlpha(config.ProjectName)),
-	)
-	err = internals.WriteEnvVar(".env", "DATABASE_URL", args.DatabaseUrl)
-	if err != nil {
-		return err
-	}
-
-	fileName := "alchemy.yaml"
-	file, err := os.Create(fileName)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	encoder := yaml.NewEncoder(file)
-	encoder.SetIndent(2)
-
-	err = encoder.Encode(config)
+	err = internals.WriteYaml("alchemy.yaml", config)
 	if err != nil {
 		return err
 	}

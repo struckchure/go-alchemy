@@ -20,12 +20,8 @@ type IAuthenticationService interface {
 
 type AuthenticationService struct {
 	// @alchemy replace userDao dao.IUserDao
-	userDao prisma.IUserDao
-}
-
-type Token struct {
-	AccessToken  string `json:"accessToken"`
-	RefreshToken string `json:"refreshToken"`
+	userDao    prisma.IUserDao
+	jwtService IJwtService
 }
 
 func (a *AuthenticationService) passwordIsValid(plain string, hashed string) (bool, error) {
@@ -41,7 +37,7 @@ type LoginArgs struct {
 type LoginResult struct {
 	// @alchemy replace User dao.User `json:"user"`
 	User   prisma.User `json:"user"`
-	Tokens Token       `json:"tokens"`
+	Tokens Tokens      `json:"tokens"`
 }
 
 func (a *AuthenticationService) Login(args LoginArgs) (*LoginResult, error) {
@@ -67,15 +63,12 @@ func (a *AuthenticationService) Login(args LoginArgs) (*LoginResult, error) {
 		return nil, errors.New("invalid credentials")
 	}
 
-	tokens := Token{
-		AccessToken:  "exampleAccessToken",
-		RefreshToken: "exampleRefreshToken",
+	tokens, err := a.jwtService.GenerateTokens(Claims{Sub: user.Id})
+	if err != nil {
+		return nil, err
 	}
 
-	return &LoginResult{
-		User:   *user,
-		Tokens: tokens,
-	}, nil
+	return &LoginResult{User: *user, Tokens: *tokens}, nil
 }
 
 // @alchemy block {{- end }}
@@ -92,7 +85,7 @@ type RegisterArgs struct {
 type RegisterResult struct {
 	// @alchemy replace User dao.User `json:"user"`
 	User   prisma.User `json:"user"`
-	Tokens Token       `json:"tokens"`
+	Tokens Tokens      `json:"tokens"`
 }
 
 func (a *AuthenticationService) Register(args RegisterArgs) (*RegisterResult, error) {
@@ -113,15 +106,12 @@ func (a *AuthenticationService) Register(args RegisterArgs) (*RegisterResult, er
 		return nil, err
 	}
 
-	tokens := Token{
-		AccessToken:  "",
-		RefreshToken: "",
+	tokens, err := a.jwtService.GenerateTokens(Claims{Sub: user.Id})
+	if err != nil {
+		return nil, err
 	}
 
-	return &RegisterResult{
-		User:   *user,
-		Tokens: tokens,
-	}, nil
+	return &RegisterResult{User: *user, Tokens: *tokens}, nil
 }
 
 // @alchemy block {{- end }}
@@ -129,6 +119,10 @@ func (a *AuthenticationService) Register(args RegisterArgs) (*RegisterResult, er
 func NewAuthenticationService(
 	// @alchemy replace userDao dao.IUserDao,
 	userDao prisma.IUserDao,
+	jwtService IJwtService,
 ) IAuthenticationService {
-	return &AuthenticationService{userDao: userDao}
+	return &AuthenticationService{
+		userDao:    userDao,
+		jwtService: jwtService,
+	}
 }
