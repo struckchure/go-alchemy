@@ -92,8 +92,8 @@ func (a *AuthenticationService) Register(args RegisterArgs) (*RegisterResult, er
 	user, err := a.userDao.Create(
 		// @alchemy replace dao.UserCreatePayload{
 		prisma.UserCreatePayload{
-			FirstName: args.FirstName,
-			LastName:  args.LastName,
+			FirstName: GetIfPresent(args.FirstName),
+			LastName:  GetIfPresent(args.LastName),
 			Email:     args.Email,
 			Password:  args.Password,
 		},

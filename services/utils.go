@@ -15,3 +15,10 @@ func GetEnv[T interface{}](key string, fallback T) T {
 
 	return v.(T)
 }
+
+func GetIfPresent(value *string) *string {
+	if value == nil {
+		return lo.ToPtr("") // Default value if nil
+	}
+	return value
+}

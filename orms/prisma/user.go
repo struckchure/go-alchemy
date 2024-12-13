@@ -17,7 +17,7 @@ type User struct {
 	Password  string `json:"-"`
 }
 
-func (User) FromModel(user *db.UserModel) *User {
+func (User) fromModel(user *db.UserModel) *User {
 	if user == nil {
 		return nil
 	}
@@ -34,22 +34,12 @@ func (User) FromModel(user *db.UserModel) *User {
 	}
 }
 
-// @alchemy block {{- if .Register }}
-type UserCreatePayload struct {
-	FirstName *string
-	LastName  *string
-	Email     string
-	Password  string
-}
-
 type UserUpdatePayload struct {
 	FirstName *string
 	LastName  *string
 	Email     *string
 	Password  *string
 }
-
-// @alchemy block {{- end }}
 
 type IUserDao interface {
 	List() ([]User, error)
@@ -59,8 +49,8 @@ type IUserDao interface {
 	// @alchemy block {{- end }}
 	// @alchemy block {{- if .Register }}
 	Create(UserCreatePayload) (*User, error)
-	Update(string, UserUpdatePayload) (*User, error)
 	// @alchemy block {{- end }}
+	Update(string, UserUpdatePayload) (*User, error)
 	Delete(string) error
 }
 
@@ -85,12 +75,19 @@ func (u *UserDao) GetByEmail(email string) (*User, error) {
 		return nil, err
 	}
 
-	return User{}.FromModel(user), err
+	return User{}.fromModel(user), err
 }
 
 // @alchemy block {{- end }}
 
 // @alchemy block {{- if .Register }}
+type UserCreatePayload struct {
+	FirstName *string
+	LastName  *string
+	Email     string
+	Password  string
+}
+
 func (u *UserDao) Create(payload UserCreatePayload) (*User, error) {
 	ctx := context.Background()
 
@@ -109,14 +106,14 @@ func (u *UserDao) Create(payload UserCreatePayload) (*User, error) {
 		return nil, err
 	}
 
-	return User{}.FromModel(user), nil
+	return User{}.fromModel(user), nil
 }
+
+// @alchemy block {{- end }}
 
 func (u *UserDao) Update(id string, payload UserUpdatePayload) (*User, error) {
 	panic("unimplemented")
 }
-
-// @alchemy block {{- end }}
 
 func (u *UserDao) Delete(id string) error {
 	panic("unimplemented")

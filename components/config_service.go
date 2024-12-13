@@ -51,6 +51,10 @@ func (c *ConfigService) setupPrisma(databaseProvider string, directory string) e
 	return nil
 }
 
+func (c *ConfigService) setupGorm(_ string) error {
+	return nil
+}
+
 func (c *ConfigService) setupOrm(cfg Config) error {
 	switch cfg.Orm.Name {
 	case "Prisma":
@@ -62,6 +66,11 @@ func (c *ConfigService) setupOrm(cfg Config) error {
 		}
 	case "Gorm":
 		color.Green("Using GORM")
+
+		err := c.setupGorm(cfg.Orm.DatabaseProvider)
+		if err != nil {
+			return err
+		}
 	default:
 		return errors.New("orm is not supported")
 	}
@@ -115,6 +124,11 @@ func (c *ConfigService) Init(args InitArgs) error {
 		Orm:         Orm{Name: args.Orm, DatabaseProvider: args.DatabaseProvider},
 	}
 
+	err := os.Chdir(config.Root)
+	if err != nil {
+		return err
+	}
+
 	if args.ShouldProvideDatabase {
 		err := c.provisionDatabase(config)
 		if err != nil {
@@ -122,7 +136,7 @@ func (c *ConfigService) Init(args InitArgs) error {
 		}
 	}
 
-	err := c.setupOrm(config)
+	err = c.setupOrm(config)
 	if err != nil {
 		return err
 	}

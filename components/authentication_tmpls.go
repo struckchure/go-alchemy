@@ -1,6 +1,8 @@
 package components
 
-var sharedTmpls []GenerateSingleTmplArgs = []GenerateSingleTmplArgs{
+import "github.com/struckchure/go-alchemy/internals"
+
+var prismaTmpls []GenerateSingleTmplArgs = []GenerateSingleTmplArgs{
 	{
 		Id:         "Models.User",
 		TmplPath:   "prisma/schema.prisma",
@@ -12,6 +14,24 @@ var sharedTmpls []GenerateSingleTmplArgs = []GenerateSingleTmplArgs{
 		OutputPath: "dao/user.go",
 		GoFormat:   true,
 	},
+}
+
+var gormTmpls []GenerateSingleTmplArgs = []GenerateSingleTmplArgs{
+	{
+		Id:         "Models.UserDao",
+		TmplPath:   "orms/gorm/user.go",
+		OutputPath: "dao/user.go",
+		GoFormat:   true,
+	},
+	{
+		Id:         "Models.Utils",
+		TmplPath:   "orms/gorm/utils.go",
+		OutputPath: "dao/utils.go",
+		GoFormat:   true,
+	},
+}
+
+var sharedTmpls []GenerateSingleTmplArgs = []GenerateSingleTmplArgs{
 	{
 		Id:         "Services.Utils",
 		TmplPath:   "services/utils.go",
@@ -26,7 +46,7 @@ var sharedTmpls []GenerateSingleTmplArgs = []GenerateSingleTmplArgs{
 	},
 }
 
-var LoginTmpls []GenerateSingleTmplArgs = append([]GenerateSingleTmplArgs{
+var loginTmpls []GenerateSingleTmplArgs = append([]GenerateSingleTmplArgs{
 	{
 		Id:         "Services.Login",
 		TmplPath:   "services/authentication.go",
@@ -35,7 +55,7 @@ var LoginTmpls []GenerateSingleTmplArgs = append([]GenerateSingleTmplArgs{
 	},
 }, sharedTmpls...)
 
-var RegisterTmpls []GenerateSingleTmplArgs = append([]GenerateSingleTmplArgs{
+var registerTmpls []GenerateSingleTmplArgs = append([]GenerateSingleTmplArgs{
 	{
 		Id:         "Services.Register",
 		TmplPath:   "services/authentication.go",
@@ -43,3 +63,35 @@ var RegisterTmpls []GenerateSingleTmplArgs = append([]GenerateSingleTmplArgs{
 		GoFormat:   true,
 	},
 }, sharedTmpls...)
+
+func GetLoginTemplates() ([]GenerateSingleTmplArgs, error) {
+	cfg, err := internals.ReadYaml[Config]("alchemy.yaml")
+	if err != nil {
+		return nil, err
+	}
+
+	switch cfg.Orm.Name {
+	case "Prisma":
+		loginTmpls = append(loginTmpls, prismaTmpls...)
+	case "Gorm":
+		loginTmpls = append(loginTmpls, gormTmpls...)
+	}
+
+	return loginTmpls, nil
+}
+
+func GetRegisterTemplates() ([]GenerateSingleTmplArgs, error) {
+	cfg, err := internals.ReadYaml[Config]("alchemy.yaml")
+	if err != nil {
+		return nil, err
+	}
+
+	switch cfg.Orm.Name {
+	case "Prisma":
+		registerTmpls = append(registerTmpls, prismaTmpls...)
+	case "Gorm":
+		registerTmpls = append(registerTmpls, gormTmpls...)
+	}
+
+	return loginTmpls, nil
+}
