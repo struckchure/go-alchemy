@@ -52,12 +52,19 @@ func (a *Authentication) PreSetup() error {
 }
 
 func (a *Authentication) PostSetup() error {
-	cmd := exec.Command("go", "run", "github.com/steebchen/prisma-client-go", "db", "push")
-	if out, err := cmd.CombinedOutput(); err != nil {
-		return errors.Join(err, errors.New(string(out)))
+	cfg, err := internals.ReadYaml[Config]("alchemy.yaml")
+	if err != nil {
+		return err
 	}
 
-	cmd = exec.Command("go", "mod", "tidy")
+	if cfg.Orm.Name == "Prisma" {
+		cmd := exec.Command("go", "run", "github.com/steebchen/prisma-client-go", "db", "push")
+		if out, err := cmd.CombinedOutput(); err != nil {
+			return errors.Join(err, errors.New(string(out)))
+		}
+	}
+
+	cmd := exec.Command("go", "mod", "tidy")
 	if out, err := cmd.CombinedOutput(); err != nil {
 		return errors.Join(err, errors.New(string(out)))
 	}
@@ -82,9 +89,14 @@ func (a *Authentication) Login() (err error) {
 		return err
 	}
 
+	loginTmpls, err := GetLoginTemplates()
+	if err != nil {
+		return err
+	}
+
 	err = GenerateMultipleTmpls(GenerateMultipleTmplsArgs{
 		ComponentId: strings.Split(componentId, ".")[0],
-		Tmpls:       LoginTmpls,
+		Tmpls:       loginTmpls,
 		Values: map[string]interface{}{
 			"Login":      true,
 			"User":       true,
@@ -116,9 +128,14 @@ func (a *Authentication) Register() (err error) {
 		return err
 	}
 
+	registerTmpls, err := GetRegisterTemplates()
+	if err != nil {
+		return err
+	}
+
 	err = GenerateMultipleTmpls(GenerateMultipleTmplsArgs{
 		ComponentId: strings.Split(componentId, ".")[0],
-		Tmpls:       RegisterTmpls,
+		Tmpls:       registerTmpls,
 		Values: map[string]interface{}{
 			"Register":   true,
 			"User":       true,

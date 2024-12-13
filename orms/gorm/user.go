@@ -7,10 +7,10 @@ import (
 )
 
 type User struct {
-	Id        string  `json:"id" gorm:"column:id,primaryKey"`
+	Id        string  `json:"id" gorm:"column:id;primaryKey;type:uuid;default:gen_random_uuid()"`
 	FirstName *string `json:"firstName" gorm:"column:first_name"`
 	LastName  *string `json:"lastName" gorm:"column:last_name"`
-	Email     string  `json:"email" gorm:"email,unique"`
+	Email     string  `json:"email" gorm:"email;unique"`
 	Password  string  `json:"-" gorm:"password"`
 }
 
@@ -70,18 +70,20 @@ type UserCreatePayload struct {
 	Password  string  `json:"password,omitempty"`
 }
 
-func (u *UserDao) Create(payload UserCreatePayload) (user *User, err error) {
-	user.FirstName = payload.FirstName
-	user.LastName = payload.LastName
+func (u *UserDao) Create(payload UserCreatePayload) (*User, error) {
+	user := User{}
+
+	SetIfPresent(user, "FirstName", payload.FirstName)
+	SetIfPresent(user, "LastName", payload.LastName)
 	user.Email = payload.Email
 	user.Password = payload.Password
 
-	err = u.client.Create(&user).Error
+	err := u.client.Create(&user).Error
 	if err != nil {
 		return nil, err
 	}
 
-	return user, err
+	return &user, err
 }
 
 // @alchemy block {{- end }}
@@ -93,15 +95,22 @@ type UserUpdatePayload struct {
 	Password  *string `json:"password,omitempty"`
 }
 
-func (u *UserDao) Update(id string, payload UserUpdatePayload) (user *User, err error) {
-	err = u.client.
+func (u *UserDao) Update(id string, payload UserUpdatePayload) (*User, error) {
+	user := User{}
+
+	SetIfPresent(user, "FirstName", payload.FirstName)
+	SetIfPresent(user, "LastName", payload.LastName)
+	SetIfPresent(user, "Email", payload.Email)
+	SetIfPresent(user, "Password", payload.Password)
+
+	err := u.client.
 		Clauses(clause.Returning{}).
 		Model(&user).Where("id = ?", id).Updates(payload).Error
 	if err != nil {
 		return nil, err
 	}
 
-	return user, err
+	return &user, err
 }
 
 func (u *UserDao) Delete(id string) error {
